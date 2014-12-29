@@ -6,7 +6,7 @@
 	</head>
 	<body lang="en">
 		<div class="err">Error</div>
-		<div class="langlink"><a href="#" onclick="setLang('en')">English</a> | <a href="#" onclick="setLang('es')">Español</a></div>
+		<div class="langlink"><a href="#" onclick="setLang('en')">English</a> | <a href="#" onclick="setLang('es')">Español</a> | <a href="#" onclick="setLang('it')">Italian</a></div>
 		<a href="#help" class="infolink">What's this about?</a>
 		<script type="text/javascript">
             var country = /cctld=(.+)/.test(location.search) ? RegExp.$1 : 'za';
@@ -276,7 +276,7 @@
 			<br><button type="submit">Send to bugzilla</button>
 			<br>
 			<em>Note: click "Submit bug" on the next screen to finish reporting the issue.</em>
-			<br><br><button type="submit" id="tweet">Write a tweet</button> (Add the site Twitter account!)
+			<br><br><button type="submit" id="tweet">Write a tweet</button> <span>(Add the site Twitter account!)</span>
 
 			<input name="alias" value="" type=hidden>
 			<input name="assigned_to" value="nobody@mozilla.org" type=hidden>
@@ -346,10 +346,10 @@
 				<li>Go back (two steps) to this page and keep scrolling through screenshots as long as you wish.
 			</ol>
 			<h2>Gotchas?</h2>
-			<ul><li>It can be helpful to test on a real Firefox OS phone or an emulator if in doubt..
+			<ul>
+				<li>It can be helpful to test on a real Firefox OS phone or an emulator if in doubt..
 				<li>If one of the screenshots looks like it didn't load fully, it probably needs manual testing to see if it's an issue. You can ignore those screenshots if you don't have a device
 				<li>The <b>current bugs</b> list is updated every two hours, so you will not see your bug reports appear immediately. (Also if somebody else is reviewing at the same time, you might report duplicate bugs.)
-
 			</ul>
 			<p>Need help? Ask <a href="http://twitter.com/MozWebCompat">@MozWebCompat</a> on Twitter, hsteen@mozilla.com by E-mail or come to the #webcompat room on Mozilla's IRC server (irc.mozilla.org).</p>
 		</div>
