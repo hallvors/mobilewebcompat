@@ -1,20 +1,6 @@
 <!DOCTYPE html><html>
 	<head><title>Screen Shot Comparison Bug Reporter</title><meta charset="utf-8">
-		<style type="text/css">
-			input[type=text]{width: 50%;} 
-			div.d1{width: 50%; float:left;position:relative;}div.d2{width: 40%;float:right;}form{float:right; width:40%;}
-			div.d1 span{position: absolute;font-size: 1.2em; line-height: 1em; top: 0; background: rgba(255, 255, 50, 0.3); opacity: 1; border: 2px outset orange; max-width: 45%; padding:0;}
-			div.d1 #fxOSLabel{right: 75%; text-align: right;}div.d1 #iOSLabel{left: 55%;} 
-			div.d1 #fxOSLabel:before{content: "\002b10"; font-size: 2em; color: orange;}
-			div.d1 #fxOSLabel:after{content: "\002015"; font-size: 2em; color: orange;}
-			div.d1 #iOSLabel:after{content: "\002b0e"; font-size: 2em; color: orange;}
-			div.d1 #iOSLabel:before{content: "\002015"; font-size: 2em; color: orange;}
-			div.d1 img{padding-top: 2em;max-width: 98%}
-			.err{display:none;position: absolute;background: #faa; top: 5%; width: 80%}
-			html.show_err .err{display:block;}
-			.infolink{position: absolute; top:0; right: 0; display: block;}
-			.message{border: 2px solid black;background: yellow;font-size: larger; position: fixed; top: 10%;right:2.5%; left: 2.5%;z-index: 10;text-align: center;padding: 2em;}
-		</style>
+		<link rel="stylesheet" href="./css/style.css">
 		<script src="http://arewecompatibleyet.com/data/masterbugtable.js"></script>
 		<script src="./js/translationdictionary.js"></script>
 	</head>
