@@ -42,7 +42,6 @@
             } catch (e) {
               document.documentElement.className = 'show_err';
               document.getElementsByClassName('err')[0].firstChild.data = 'Failed to load list of images for this top-level domain';
-
             }
             var imagelist = JSON.parse(xhr.responseText);
             /*
@@ -79,6 +78,7 @@
               div.appendChild(document.createElement('br'));
               var a = current_bugs.getElementsByTagName('h1')[0].appendChild(document.createElement('a'));
               a.id = 'main-site-link';
+			  
               function setIndex(down) {
                 var skipknown = document.getElementById('skipknown').checked;
                 do {
@@ -115,11 +115,14 @@
                     var a2 = current_bugs.appendChild(document.createElement('a'));
                     a2.href = 'https://bugzilla.mozilla.org/show_bug.cgi?id=' + id;
                     a2.textContent = masterBugTable.bugs[id].summary;
+					current_bugs.appendChild(document.createTextNode (" - "));
+					var a3 = current_bugs.appendChild(document.createElement('a'));
+                    a3.href = 'https://webcompat.com/simplebug/index.html#mozilla/' + id;
+                    a3.textContent = '(Simplebug link)';
                     current_bugs.appendChild(document.createTextNode(' ' + masterBugTable.bugs[id].status + ' ' + masterBugTable.bugs[id].resolution));
                     current_bugs.appendChild(document.createElement('br'));
                     current_bugs.appendChild(document.createElement('br'));
-                  }
-                  ;
+                  };
                 }
                 if (current_bugs.childNodes.length === 2) {
                   current_bugs.appendChild(document.createElement('p')).appendChild(document.createTextNode(__('No bugs reported for ') + imagelist[i].hostname + '! :-o'));
@@ -253,6 +256,12 @@
               return strings;
             }
 
+            document.getElementById("tweet").addEventListener('click', function () {
+              window.open("http://twitter.com/share?url=" +
+                      encodeURIComponent(url) + "&text=" +
+                      encodeURIComponent(text) + "&count=none/",
+                      "tweet", "height=300,width=550,resizable=1");
+            }, false);
 		</script>
 
 		<form action="https://bugzilla.mozilla.org/enter_bug.cgi">
@@ -271,9 +280,10 @@
 			<textarea name="comment"></textarea>
 			<p>HTTP header check: <button onclick="checkHttpHeaders();
                   return false;">Check now</button></p>
-			<bR><button type="submit">Send to bugzilla</button>
+			<br><button type="submit">Send to bugzilla</button>
 			<br>
 			<em>Note: click "Submit bug" on the next screen to finish reporting the issue.</em>
+			<br><br><button type="submit" id="tweet">Write a tweet</button>
 
 			<input name="alias" value="" type=hidden>
 			<input name="assigned_to" value="nobody@mozilla.org" type=hidden>
