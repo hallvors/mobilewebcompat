@@ -902,3 +902,5 @@
 "992851","2014-11-14 18:04:59","Mozilla/5.0 (Mobile; rv:18.0) Gecko/18.0 Firefox/18.0","true","Google flight search: book button does not work",""
 "975439","2014-11-14 19:57:25","Mozilla/5.0 (Mobile; rv:26.0) Gecko/26.0 Firefox/26.0","true","techeye.net serves WAP content to Firefox for Android","no WAP here, right?!"
 "1019380","2014-11-14 19:57:28","Mozilla/5.0 (Mobile; rv:18.0) Gecko/18.0 Firefox/18.0","true","hotels.com sends Desktop Content to Firefox OS and Firefox Android",""
+"981390","2014-12-16 14:07:16","Mozilla/5.0 (Mobile; rv:18.0) Gecko/18.0 Firefox/18.0","false","friv.com has broken layout in Firefox OS",""
+"942305","2014-12-16 14:07:21","Mozilla/5.0 (Mobile; rv:18.0) Gecko/18.0 Firefox/18.0","true","redbus.in isn't redirecting to mobile site on Firefox OS",""

@@ -131,6 +131,11 @@ var topLists = [
 	 "id": "pt50"
 	},
 	{
+		"name": "Russia top sites",
+		"url": "ru.json",
+		"id": "ru"
+	},
+	{
 		"name": "South Africa 150",
 		"url": "za150.json",
 		"id": "za150"
