@@ -113,6 +113,7 @@ function retrieveTestResults(indexData, done1, done2){
 	}
 }
 function processTestResults(data){
+	if(!data)return;
 	data = CSVToArray(data);
 	data.forEach(function(value,index){
 		if(!testResults[value[0]])testResults[value[0]]  = [];
