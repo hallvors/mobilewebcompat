@@ -30,7 +30,26 @@ function mobileLinkOrScriptUrl(str){
 function hasVideoTags(){
     return !!document.getElementsByTagName('video').length;
 }
+
+function pageWidthFitsScreen(){
+    var docwidth = Math.max(document.body.scrollWidth, document.documentElement.scrollWidth);
+    if(docwidth > (window.innerWidth * 1.02))return false; // page is more than 2 percentage points wider than than window width
+    return true;
+
+}
+function hasHtmlOrBodyMobileClass(){
+    ['mobile', 'touch'].forEach(function(str){
+        if(document.documentElement.classList.contains(str) || document.body.classList.contains(str)) return true;
+    });
+    return false;
+}
+
 function noWapContentPlease(response){
+    if(!response)return 'delay-and-retry'; // This basically happens due to race conditions
+    // Due to the way Fx handles unsupported content types, we can't detect WAP content
+    // from inside the document itself. This needs to be tested from SlimerJS and/or Chrome.
+    // On the assumption that the SlimerJS part of the test runs correctly, we can just
+    // return 'delay-and-retry' here and trust that results will be recorded elsewhere.
     var contentType;
     for(var prop in response.headers){
         if(/content-type/i.test(prop))contentType = response.headers[prop];
