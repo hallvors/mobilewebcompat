@@ -620,3 +620,55 @@ html.show_err .err{
 .langlink {
 	margin-bottom:2px;
 }
+/* Loading indicator code borrowed from Wikimedia */
+@-webkit-keyframes tux-loading-indicator-spin {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes tux-loading-indicator-spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+.loading{
+    position: absolute;
+    opacity: 0.8;
+    background: #fff;
+    left:0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 11;
+    display: none;
+}
+.show_loading .loading{
+    display: block;
+}
+.tux-loading-indicator {
+    margin:auto;
+    margin-top: 10%;
+    background: transparent url(../../images/Vector_Loading_fallback.gif) center center no-repeat;
+    background-image: -webkit-linear-gradient(transparent, transparent), url(../../images/Vector_Loading.svg);
+    background-image: -moz-linear-gradient(transparent, transparent), url(../../images/Vector_Loading.svg);
+    background-image: linear-gradient(transparent, transparent), url(../../images/Vector_Loading.svg);
+    background-size: 100%;
+    -webkit-animation-name: tux-loading-indicator-spin;
+    -webkit-animation-duration: 1.5s;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: linear;
+    animation-name: tux-loading-indicator-spin;
+    animation-duration: 1.5s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    height: 100px;
+    width: 100px;
+    backface-visibility: hidden;
+}

@@ -6,13 +6,14 @@
 	</head>
 	<body lang="en">
 		<div class="err">Error</div>
+    <div class="loading"><div class="tux-loading-indicator"></div></div>
 		<div class="langlink"><a href="#" onclick="setLang('en')">English</a> | <a href="#" onclick="setLang('es')">Español</a> | <a href="#" onclick="setLang('it')">Italian</a></div>
 		<a href="#help" class="infolink">What's this about?</a>
 		<script type="text/javascript">
             var country = /cctld=(.+)/.test(location.search) ? RegExp.$1 : 'za';
             var dataurl = 'http://hallvord.com/temp/moz/' + country + '/comp/'; // location.pathname.indexOf(country+'/comp/') > -1 ? './' : country+'/comp/';
             var xhr = new XMLHttpRequest();
-			var nick;
+      			var nick;
             if (!('withCredentials' in xhr)) {
               document.documentElement.className = 'show_err';
               document.getElementsByClassName('err')[0].firstChild.data = 'Your browser does not support CORS (cross-origin XMLHttpRequest). Use a newer web browser to make this page work.';
@@ -88,30 +89,41 @@
                     (new Image()).src = dataurl + imagelist[i + 2].name;
                 }
               }
-				function seenOrBugged(obj) {
-					return ((window.masterBugTable && masterBugTable.hostIndex[obj.hostname] && masterBugTable.hostIndex[obj.hostname].open.length > 0 )|| obj.reviewed)
-				}
+      				function seenOrBugged(obj) {
+      					return ((window.masterBugTable && masterBugTable.hostIndex[obj.hostname] && masterBugTable.hostIndex[obj.hostname].open.length > 0 )|| obj.reviewed)
+      				}
 
               function go() {
                 img.src = dataurl + imagelist[i].name;
+                console.log(img.complete);
+                var img2 = new Image(); img2.src = img.src;
+                console.log(img2.complete)
+                if(!img2.complete){
+                  document.body.classList.add('show_loading');
+                  console.log('show_loading '+document.body.className);
+                  img2.onload = function(){
+                    document.body.classList.remove('show_loading');
+                  }
+
+                }
                 location.hash = '#' + i;
                 document.getElementsByName('bug_file_loc')[0].value = a.href = 'http://' + (a.textContent = imagelist[i].hostname);
-				var fullcount = 0;
-				if(document.getElementById('skipknown').checked){
-					for(var j = 0; j < imagelist.length; j++){
-						if(!seenOrBugged(imagelist[j]))fullcount++;
-					}
-				}else{
-					fullcount = imagelist.length;
-				}
-				document.title = 'image '+(i+1)+'/' + imagelist.length + ' (to review: ' + fullcount + ')';
-				var star8 = document.getElementsByClassName('star8')[0];
-				if(imagelist[i].reviewed){
-					star8.style.display='';
-					star8.firstChild.textContent = 'Reviewed\n' + imagelist[i].reviewed + (imagelist[i].reviewer ? ' by ' + imagelist[i].reviewer : '');
-				}else{
-					star8.style.display='none';
-				}
+        				var fullcount = 0;
+        				if(document.getElementById('skipknown').checked){
+        					for(var j = 0; j < imagelist.length; j++){
+        						if(!seenOrBugged(imagelist[j]))fullcount++;
+        					}
+        				}else{
+        					fullcount = imagelist.length;
+        				}
+        				document.title = 'image '+(i+1)+'/' + imagelist.length + ' (to review: ' + fullcount + ')';
+        				var star8 = document.getElementsByClassName('star8')[0];
+        				if(imagelist[i].reviewed){
+        					star8.style.display='';
+        					star8.firstChild.textContent = 'Reviewed\n' + imagelist[i].reviewed + (imagelist[i].reviewer ? ' by ' + imagelist[i].reviewer : '');
+        				}else{
+        					star8.style.display='none';
+        				}
                 updateSummDesc();
                 current_bugs.getElementsByTagName('h2').textContent = 'Current bugs for ' + imagelist[i].hostname;
                 while (current_bugs.childNodes.length > 2)
