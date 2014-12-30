@@ -20,11 +20,10 @@ var flagThesePris =  {'P1':1,'P2':2}
 var bz_show_bug = 'https://bugzilla.mozilla.org/show_bug.cgi?id=';
 var bz_list_specific_bug = 'https://bugzilla.mozilla.org/buglist.cgi?bug_id=';
 var resolvedStates = {'RESOLVED':1,'CLOSED':1,'VERIFIED':1};
-var alexaGlobalTreshold = 4;
 var testResults = {}; // automated test results, per bug
 var manualTestResults = {}; // manual test results, per site, will contain a list of "ok" flags for a specific date/browser
 // some variables related to calculating Alexa metrics..
-var alexaListsUniqueHosts = {}, alexaListsUniqueHostsWithOpenBugs={}, uniqueAlexaListedBugs={};
+var trackedListsUniqueHosts = {}, trackedListsUniqueHostsWithOpenBugs={}, uniqueBugsOnTrackedSites={};
 masterBugTable.metrics.failingTests = 0;
 if('ontouchstart' in window){document.documentElement.classList.add('touch_friendly');} // show links always rather than on hover if touch..
 retrieveTestIndex(fillTables, regressionTable);
@@ -47,40 +46,53 @@ function fillTables() {
 		var id=list.id, tr = document.getElementById('row-'+id), ccTLD = masterBugTable.lists[list.id].ccTLD;
 		// one round purely for Alexa-related metrics, before we mix in the non-Alexa domains..
 		for(var i = 0, site; site = data[i]; i++){
-			if( ! (site in alexaListsUniqueHosts) )  alexaListsUniqueHosts[site] = 1;
+			if( ! (site in trackedListsUniqueHosts) )  trackedListsUniqueHosts[site] = 1;
 			if(masterBugTable.hostIndex[site] && masterBugTable.hostIndex[site].open.length){
-				alexaListsUniqueHostsWithOpenBugs[site]=1;
-				masterBugTable.hostIndex[site].open.forEach(function(id){uniqueAlexaListedBugs[id]=1});
+				trackedListsUniqueHostsWithOpenBugs[site]=1;
+				masterBugTable.hostIndex[site].open.forEach(function(id){uniqueBugsOnTrackedSites[id]=1});
 			}
 		}
+		var numLocalHostsWithOpenBugs = masterBugTable.lists[list.id].metrics.numHostsWithOpenBugs;
+		var numLocalBugs = masterBugTable.lists[id].metrics.numOpenBugs;
 		if(ccTLD){
 			// We love local stuff. Let's add up all domains with this TLD
 			for(var site in masterBugTable.hostIndex){
 				if( site.indexOf('.'+ccTLD)>-1 && site.indexOf('.'+ccTLD) + ccTLD.length === site.length-1 ){ // we found a name that ends with our ccTLD
-					if(data.indexOf(site)==-1)data.push(site);
+					if(data.indexOf(site)==-1){
+						data.push(site);
+						if(masterBugTable.hostIndex[site].open.length){
+							numLocalHostsWithOpenBugs++;
+							numLocalBugs += masterBugTable.hostIndex[site].open.length;
+						}
+					}
 				}
 			}
 		}
-		tr.getElementsByTagName('td')[0].textContent = data.length+' sites. ';
+
+		var percOfLocalHostsHaveBugs = parseInt((numLocalHostsWithOpenBugs / data.length ) * 100);
+		tr.getElementsByTagName('td')[0].textContent = data.length+' sites, \n' + (masterBugTable.lists[id].metrics ? percOfLocalHostsHaveBugs + '% have open bugs. ' : '' );
+		if(masterBugTable.lists[list.id].metrics){
+			tr.getElementsByTagName('td')[0].title = 'The ' + numLocalBugs + ' open bugs for sites in this list affect ' + numLocalHostsWithOpenBugs + ' unique host names.';
+		}
 		calculateListDetails(tr, list, true)
-		if(location.hash && location.hash.indexOf(list.id)>-1)showListDetails(location.hash.substr(1), true);
+		if(location.hash && location.hash === '#list:'+list.id)showListDetails(location.hash.substr(1), true);
 	} // end of toplist loop
 	if(masterBugTable.metrics){
-		var numUniqueAlexaHosts = Object.keys(alexaListsUniqueHosts).length;
-		var numHostsWithOpenBugs = Object.keys(alexaListsUniqueHostsWithOpenBugs).length;
-		var numOpenBugsOnAlexaLists = Object.keys(uniqueAlexaListedBugs).length;
-		var percOfHostsHaveBugs = parseInt((numHostsWithOpenBugs / numUniqueAlexaHosts ) * 100), m;
+		var numUniqueTrackedHosts = Object.keys(trackedListsUniqueHosts).length;
+		var numHostsWithOpenBugs = Object.keys(trackedListsUniqueHostsWithOpenBugs).length;
+		var numOpenBugsOnTrackedLists = Object.keys(uniqueBugsOnTrackedSites).length;
+		var percOfHostsHaveBugs = parseInt((numHostsWithOpenBugs / numUniqueTrackedHosts ) * 100), m;
 		(m=document.getElementById('metrics')).appendChild(document.createTextNode('There are '))
-		m.appendChild(elm('b', numOpenBugsOnAlexaLists));
+		m.appendChild(elm('b', numOpenBugsOnTrackedLists));
 		m.appendChild(document.createTextNode(' open bugs on listed sites, '))
 		m.appendChild(elm('b', percOfHostsHaveBugs));
 		m.appendChild(document.createTextNode('% of listed sites are affected. We are tracking ' ))
-		m.appendChild(elm('b', numUniqueAlexaHosts));
+		m.appendChild(elm('b', numUniqueTrackedHosts));
 		m.appendChild(document.createTextNode(' sites across ' ))
 		m.appendChild(elm('b', Object.keys(masterBugTable.lists).length));
 		m.appendChild(document.createTextNode(' lists. '));
 		m.appendChild(document.createTextNode(' There are '));
-		m.appendChild(elm('b', masterBugTable.metrics.numOpenBugs-numOpenBugsOnAlexaLists));
+		m.appendChild(elm('b', masterBugTable.metrics.numOpenBugs-numOpenBugsOnTrackedLists));
 		m.appendChild(document.createTextNode(' open bugs on sites we don\'t currently track.'));
 		/*, and '))
 		for(var bug in testResults){
@@ -200,6 +212,7 @@ function showTestCode(evt){
 		evt.preventDefault();
 		var div = elm('div', 'To run the test, try pasting this code in the console after spoofing as '+ bugdata[bug].ua +' and loading ', {id:'testcodeviewer'});
 		div.appendChild(elm('a', bugdata[bug].url, {href:bugdata[bug].url, target:'_blank'}));
+		div.appendChild(elm('br'));
 		div.appendChild(elm('small', 'Note: testing from the console may not work correctly when a step causes navigation.'))
 		var insertCode = (bugdata[bug].testType === 'xhr') ? 'var response, xhr = new XMLHttpRequest(); xhr.open("GET", "' + bugdata[bug].url+'", false); response = {text:xhr.responseText, headers:{}}; var tmp = xhr.getAllResponseHeaders().split(/\r\n/i);for(var i=0, nv; nv=tmp[i]; i++){nv = nv.split(/:\s?/); response.headers[nv[0]]=nv[1];}' : '';
 		var pre = elm('pre', '(function(){\n\tvar i=1, steps = [\n/* test code: */\n' + bugdata[bug].steps.join('\n,\n') + '\n/* end test code - below is just helper code to make this run smoothlyish */]\n\n'+insertCode+'\n\tfunction doStep(){ if(typeof hasViewportMeta !== "function"){var s=document.body.appendChild(document.createElement(\'script\')); s.src=\'http://hallvord.com/temp/moz/stdTests.js\'; s.onload = doStep; return;};if(steps.length){var result = steps[0](); console.log(\'test step \'+i+\' says: \'+result); if(result !==\'delay-and-retry\')steps.shift(); i++; setTimeout(doStep,300);}} doStep();})()');
@@ -353,8 +366,7 @@ function shouldExcludeUSSite(list, host){
 	// now.. the local lists become more interesting and useful if the big, "global" sites are taken out.
 	// So let's skip sites from local listings even if they are popular in that country..
 	if(list === '1000' || list === 'us50') return false; // include all sites in these lists
-	//if( masterBugTable.lists['alexa1000'] && masterBugTable.lists['alexa1000'].data.indexOf(host)>-1  && masterBugTable.lists['alexa1000'].data.indexOf(host)<alexaGlobalTreshold ){
-	if( list !== 'us50' && masterBugTable.lists['us50'] && masterBugTable.lists['us50'].data.indexOf(host)>-1 /* && masterBugTable.lists['alexa1000'].data.indexOf(host)<alexaGlobalTreshold */){
+	if( list !== 'us50' && masterBugTable.lists['us50'] && masterBugTable.lists['us50'].data.indexOf(host)>-1){
 		return true;
 	}
 	return false;
