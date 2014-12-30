@@ -7,11 +7,11 @@ function getDependentBugs(dependentBugs, successFunction, errorFunction){
 }
 
 function _getBugs(bugIds, fields, successFunction, errorFunction){
-	if(bugIds.length == 0) return; 
-	var url = "https://api-dev.bugzilla.mozilla.org/latest/bug?include_fields=" + fields + "&id=" + bugIds;
+	if(bugIds.length == 0) return;
+	var url = "https://bugzilla.mozilla.org/bzapi/bug?include_fields=" + fields + "&id=" + bugIds;
 	$.ajax({
 	  url: url,
-	  crossDomain:true, 
+	  crossDomain:true,
 	  dataType: 'json',
 	  success: function(data){
 	    successFunction(data.bugs);
