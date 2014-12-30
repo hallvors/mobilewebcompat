@@ -1,10 +1,10 @@
 <!DOCTYPE html><html>
 <head><title>screen shot comparison bug reporter</title><meta charset="utf-8">
 <style type="text/css">
-input[type=text]{width: 50%;} 
+input[type=text]{width: 50%;}
 div.d1{width: 50%; float:left;position:relative;}div.d2{width: 40%;float:right;}form{float:right; width:40%;}
 div.d1 span{position: absolute;font-size: 1.2em; line-height: 1em; top: 0; background: rgba(255, 255, 50, 0.3); opacity: 1; border: 2px outset orange; max-width: 45%; padding:0;}
-div.d1 #fxOSLabel{right: 75%; text-align: right;}div.d1 #iOSLabel{left: 55%;} 
+div.d1 #fxOSLabel{right: 75%; text-align: right;}div.d1 #iOSLabel{left: 55%;}
 div.d1 #fxOSLabel:before{content: "\002b10"; font-size: 2em; color: orange;}
 div.d1 #fxOSLabel:after{content: "\002015"; font-size: 2em; color: orange;}
 div.d1 #iOSLabel:after{content: "\002b0e"; font-size: 2em; color: orange;}
@@ -14,6 +14,38 @@ div.d1 img{padding-top: 2em;max-width: 98%}
 html.show_err .err{display:block;}
 .infolink{position: absolute; top:0; right: 0; display: block;}
 .message{border: 2px solid black;background: yellow;font-size: larger; position: fixed; top: 10%;right:2.5%; left: 2.5%;z-index: 10;text-align: center;padding: 2em;}
+.star8 {
+ background: blue; width: 120px; color: #fff;
+ height: 120px;
+ position: absolute;
+ bottom: 10%;
+ left: 20%;
+ -webkit-transform: rotate(20deg);
+ -moz-transform: rotate(20deg);
+ -ms-transform: rotate(20deg);
+ -o-transform: rotate(20deg);
+}
+.star8 div{
+ -webkit-transform: rotate(-20deg);
+ -moz-transform: rotate(-20deg);
+ -ms-transform: rotate(-20deg);
+ -o-transform: rotate(-20deg);
+ padding-top: 20px;
+ text-align: center;
+}
+.star8:before {
+ content: "";
+ position: absolute;
+ top: 0;
+ left: 0;
+ height: 120px;
+ width: 120px;
+ background: blue;
+ -webkit-transform: rotate(135deg);
+ -moz-transform: rotate(135deg);
+ -ms-transform: rotate(135deg);
+ -o-transform: rotate(135deg);
+}
 </style>
 <script src="http://arewecompatibleyet.com/data/masterbugtable.js"></script>
 <script src="./js/translationdictionary.js"></script>
@@ -26,7 +58,8 @@ html.show_err .err{display:block;}
 
 var country = /cctld=(.+)/.test(location.search) ? RegExp.$1 : 'za';
 var dataurl = 'http://hallvord.com/temp/moz/'+country+'/comp/'; // location.pathname.indexOf(country+'/comp/') > -1 ? './' : country+'/comp/';
-var xhr = new XMLHttpRequest(); 
+var xhr = new XMLHttpRequest();
+var nick;
 if(!('withCredentials' in xhr)){document.documentElement.className='show_err';document.getElementsByClassName('err')[0].firstChild.data = 'Your browser does not support CORS (cross-origin XMLHttpRequest). Use a newer web browser to make this page work.';throw 'CORS support required';}
 if(typeof window.masterBugTable === 'undefined'){
 	document.documentElement.className = 'show_err';document.getElementsByClassName('err')[0].firstChild.data = 'Bug data missing (masterbugtable.js did not load). List of existing bugs will not be shown.'
@@ -73,7 +106,7 @@ window.onload = function(){
 		var skipknown = document.getElementById('skipknown').checked;
 		do{
 			if(down)i--; else i++;
-		}while( skipknown && imagelist[i] && window.masterBugTable && masterBugTable.hostIndex[imagelist[i].hostname] && masterBugTable.hostIndex[imagelist[i].hostname].open.length);
+		}while( skipknown && imagelist[i] && seenOrBugged(imagelist[i]));
 		if (down && i<0) {
 			i = 0;
 		}else if(i > imagelist.length - 1){
@@ -84,11 +117,29 @@ window.onload = function(){
 		if(i+1 in imagelist)(new Image()).src = dataurl+imagelist[i+1].name;
 		if(i+2 in imagelist)(new Image()).src = dataurl+imagelist[i+2].name;
 	}
+	function seenOrBugged(obj) {
+		return ((window.masterBugTable && masterBugTable.hostIndex[obj.hostname] && masterBugTable.hostIndex[obj.hostname].open.length > 0 )|| obj.reviewed)
+	}
 	function go(){
 		img.src = dataurl + imagelist[i].name;
 		location.hash = '#'+i;
 		document.getElementsByName('bug_file_loc')[0].value = a.href = 'http://' + (a.textContent = imagelist[i].hostname);
-		document.title = 'image '+(i+1)+'/'+imagelist.length;
+		var fullcount = 0;
+		if(document.getElementById('skipknown').checked){
+			for(var j = 0; j < imagelist.length; j++){
+				if(!seenOrBugged(imagelist[j]))fullcount++;
+			}
+		}else{
+			fullcount = imagelist.length;
+		}
+		document.title = 'image '+(i+1)+'/' + fullcount;
+		var star8 = document.getElementsByClassName('star8')[0];
+		if(imagelist[i].reviewed){
+			star8.style.display='';
+			star8.firstChild.textContent = 'Reviewed\n' + imagelist[i].reviewed + (imagelist[i].reviewer ? ' by ' + imagelist[i].reviewer : '');
+		}else{
+			star8.style.display='none';
+		}
 		updateSummDesc();
 		current_bugs.getElementsByTagName('h2').textContent = 'Current bugs for '+imagelist[i].hostname;
 		while(current_bugs.childNodes.length>2)current_bugs.removeChild(current_bugs.lastChild);
@@ -106,7 +157,8 @@ window.onload = function(){
 		if(current_bugs.childNodes.length===2){
 			current_bugs.appendChild(document.createElement('p')).appendChild(document.createTextNode(__('No bugs reported for ')+imagelist[i].hostname+'! :-o'))
 		}
-		document.getElementsByName('status_whiteboard')[0].value = '[country-'+country+']';
+		// country codes are two letters long, if 'country' has more letters it's probably some other tag..
+		document.getElementsByName('status_whiteboard')[0].value = country.length === 2 ? '[country-'+country+']' : '[' + country + ']';
 		document.getElementsByName('comment')[0].value = '';
 	}
 	go();
@@ -126,6 +178,8 @@ window.onload = function(){
 	document.onclick = function(e){
 		if(e.target.id === 'prev')setIndex(true),e.preventDefault();
 		if(e.target.id === 'next')setIndex(),e.preventDefault();
+		if(e.target.id === 'mark_rev')setReviewed(i),setIndex(),e.preventDefault();
+		if(e.target.id === 'skipknown') go(); // this basically just to update the count in the title bar.. refactor, anyone?
 	}
 	window.checkHttpHeaders = function(){
 		window.status='Checking headers, please wait...';
@@ -151,6 +205,14 @@ window.onload = function(){
 		}
 		x.send();
 	}
+	nick = localStorage.getItem('nick') || '';
+	function setReviewed(idx){
+		var d = new Date();
+		imagelist[idx].reviewed = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+		if(nick)imagelist[idx].reviewer = nick;
+		(new Image()).src = dataurl + '../../mark_done.php?cctld=' + country + '&imgidx=' + idx + '&nick=' + nick;
+	}
+
 }
 
 
@@ -192,7 +254,7 @@ function setLang(lang){
 		if(!(/^\s*$/.test(textNode.data) || textNode.parentNode.tagName === 'OL')){
 			if(buildOriginalPhraseList){
 				translationDictionary[oldLang][nodeCounter] = textNode.data;
-				if('value' in textNode.parentNode && 'form' in textNode.parentNode)textNode.parentNode.value = textNode.data; // <option> .. 
+				if('value' in textNode.parentNode && 'form' in textNode.parentNode)textNode.parentNode.value = textNode.data; // <option> ..
 			}
 			// If we're translating to a language we have a direct phrase mapping from English for..
 			if(translationDictionary.en[nodeCounter] in translationDictionary[lang]){
@@ -218,13 +280,20 @@ function getStrings(){ // purely a convenience method when creating translation 
 	return strings;
 }
 
+
 </script>
+
+<div class="star8" style="display:none"><div></div></div>
 
 <form action="https://bugzilla.mozilla.org/enter_bug.cgi">
 	<hr>
-	<p><em>Go through images with prev/next buttons below or left/right arrow button</em></p>
+	<p><em>Go through images with prev/next buttons below or left/right arrow button</em>. <br>If you decide that the screenshot doesn't show any problems, click the ✓ button.</p>
+	If you want to "sign" your review work, please click:
+<input type="button" onclick="localStorage.setItem('nick', nick = prompt('Type your nickname', nick))" value="Set a nick">
+<br>
 <button id="prev">&lt;&lt;</button>
-<button id="next">&gt;&gt;</button> <label><input type="checkbox" id="skipknown"> Skip screenshots for sites with open bugs</label>
+<input type="button" id="mark_rev" title="mark screenshot reviewed and go to next" value="✓">
+<button id="next">&gt;&gt;</button> <label><input type="checkbox" id="skipknown"> Skip already reviewed and screenshots for sites with open bugs</label>
 
 	<p>If you notice an issue that's not reported, please test to check that it's a real issue. You can pre-fill some values in Bugzilla from this form:</p>
 <p>URL: <input name="bug_file_loc" value="http://" type=text onchange="updateSummDesc()"><a href=""></a></p>
@@ -291,7 +360,7 @@ function getStrings(){ // purely a convenience method when creating translation 
 <input name="requestee_type-607" value="" type=hidden>
 <input name="requestee_type-800" value="" type=hidden>
 <input name="target_milestone" value="---" type=hidden>
-<input name="version" value="unspecified" type=hidden> 
+<input name="version" value="unspecified" type=hidden>
 <hr>
 </form>
 
@@ -310,7 +379,7 @@ function getStrings(){ // purely a convenience method when creating translation 
 <ul><li>It can be helpful to test on a real Firefox OS phone or an emulator if in doubt..
 	<li>If one of the screenshots looks like it didn't load fully, it probably needs manual testing to see if it's an issue. You can ignore those screenshots if you don't have a device
 	<li>The <b>current bugs</b> list is updated every two hours, so you will not see your bug reports appear immediately. (Also if somebody else is reviewing at the same time, you might report duplicate bugs.)
-	
+
 </ul>
 <p>Need help? Ask <a href="http://twitter.com/MozWebCompat">@MozWebCompat</a> on Twitter, hsteen@mozilla.com by E-mail or come to the #webcompat room on Mozilla's IRC server (irc.mozilla.org).</p>
 </div>

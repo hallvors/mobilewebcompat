@@ -1,7 +1,7 @@
 var translationDictionary = {
 	"es" : {
 		"Go through images with prev/next buttons below or left/right arrow button":"Desplázate por las imágenes pulsando el botón \"anterior/siguiente\" de debajo o los botones con flechas \"izquierda/derecha\"",
-		" Skip screenshots for sites with open bugs":"Sáltate imágenes para sitios con errores abiertos",
+		" Skip already reviewed and screenshots for sites with open bugs":"Sáltate imágenes para sitios con errores abiertos",
 		"If you notice an issue that's not reported, please test to check that it's a real issue. You can pre-fill some values in Bugzilla from this form:" : "Si encuentras un fallo que no ha sido reportado, porfavor comprueba que es un fallo real. Puedes pre-rellenar algunos valores en Bugzilla basándote en este formulario:",
 		"Current bugs": "Errores actuales",
 		"URL:": "URL:",
@@ -40,7 +40,8 @@ var translationDictionary = {
 	    "No bugs reported for ":"No hay errores reportados para ",
 		"Need help? Ask ": "¿Necesitas ayuda? Pregunta a ",
 		" on Twitter, hsteen@mozilla.com by E-mail or come to the #webcompat room on Mozilla's IRC server (irc.mozilla.org).": " en Twitter, o manda un E-mail a hsteen@mozilla.com, o pásate por la sala #webcompat del servidor IRC de Mozilla (irc.mozilla.org).",
-		"This review is completed. Thanks :)":"Revisión completa, gracias!"
+		"This review is completed. Thanks :)":"Revisión completa, gracias!",
+		"If you decide that the screenshot doesn't show any problems, click the ✓ button.":""
 	}
 
 }
@@ -52,7 +53,7 @@ function __(str){
 
 /*
 
-There is a helper method getStrings() that will output an array of all strings in the DOM. 
+There is a helper method getStrings() that will output an array of all strings in the DOM.
 This can be useful to generate translation dictionaries if the text in the markup has been translated.
 
 JSON.stringify(getStrings())
