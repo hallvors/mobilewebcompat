@@ -24,7 +24,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__))) # For CRON usage..
 # however, for some major sites with lots of distinct properties we loose too much useful information if we classify it just by domain name..
 # conf['weWantSubdomainsFor'] is a list of hostnames that should not be reduced to domain names. For these, we'll strip any *www.* prefix, but
 # no other subdomains. (Another option is to only strip www - might work too)
-conf = { 'weWantSubdomainsFor': r'(\.google\.com|\.live\.com|\.yahoo\.com|go\.com|\.js$)' } # the latter is not, strictly speaking, a subdomain..
+conf = { 'weWantSubdomainsFor': r'(\.google\.com|\.live\.com|\.yahoo\.com|go\.com|\.js$)', 'load_remote_bz_data': True } # the latter is not, strictly speaking, a subdomain..
 
 # http://stackoverflow.com/questions/8230315/python-sets-are-not-json-serializable :-(
 class SetEncoder(json.JSONEncoder):
@@ -40,9 +40,18 @@ f.close()
 masterBugTable = {'hostIndex':{}, 'bugs':{}, 'lists':{}}
 
 def main():
-	urltemplate = 'https://api-dev.bugzilla.mozilla.org/latest/bug?component=Mobile&product=Tech%20Evangelism&component=Desktop&include_fields=id,summary,creation_time,last_change_time,status,resolution,depends_on,whiteboard,cf_last_resolved,url,priority' # removed ",flags" to work around bugzilla bug..
-	bzdata = get_remote_file(urltemplate, True)
-	bzdataobj = json.loads(bzdata)
+	if conf['load_remote_bz_data']:
+		urltemplate = 'https://bugzilla.mozilla.org/bzapi/bug?component=Mobile&product=Tech%20Evangelism&component=Desktop&include_fields=id,summary,creation_time,last_change_time,status,resolution,depends_on,whiteboard,cf_last_resolved,url,priority' # removed ",flags" to work around bugzilla bug..
+		bzdata = get_remote_file(urltemplate, True)
+		#f = open('data/bz-cache.json', 'w')
+		#f.write(bzdata)
+		#f.close()
+		bzdataobj = json.loads(bzdata)
+	else:
+		print('Warning: using cached bzdata')
+		f = open('data/bz-cache.json', 'r')
+		bzdataobj = json.load(f)
+		f.close()
 
 	# reading our lists of regionally important sites
 	for fn in glob.glob('..' + os.sep +'data' + os.sep + '*.json'):
@@ -53,9 +62,21 @@ def main():
 
 		if listname:
 			masterBugTable['lists'][listname] = data
-			masterBugTable['lists'][listname]['metrics']={'numOpenBugs':0, 'numClosedBugs':0}
+			masterBugTable['lists'][listname]['metrics']={'numOpenBugs':0, 'numClosedBugs':0, 'numHostsWithOpenBugs': 0}
 		f.close()
 	metrics={'allOpenBugsForAllLists':set(), 'hostsWithOpenBugs':set(), 'totalUniqueHosts':set()}
+
+	# The U.S. dominates the internet for sure - but local lists become much less interesting
+	# with all the Google and Facebook issues repeated everywhere. Let's pretend U.S. 50 aren't
+	# dominant in local markets..
+	for domain in masterBugTable['lists']['us50']['data']:
+		for listname in masterBugTable['lists']:
+			# if listname != 'us50' and listname != '1000':
+			if 'ccTLD' in masterBugTable['lists'][listname]:
+				try:
+					masterBugTable['lists'][listname]['data'].remove(domain)
+				except:
+					pass
 
 	for bug in bzdataobj['bugs']:
 		if re.search(r'\[meta\]', bug['summary'], re.I) : # We don't care about [meta] stuff. Why? Well, we're post-post-modern, that's why.
@@ -94,6 +115,8 @@ def main():
 			if str(domain) in masterBugTable['hostIndex']:
 				the_list_data['metrics']['numOpenBugs'] += len(masterBugTable['hostIndex'][domain]['open'])
 				the_list_data['metrics']['numClosedBugs'] += len(masterBugTable['hostIndex'][domain]['resolved'])
+				if len(masterBugTable['hostIndex'][domain]['open']) > 0:
+					the_list_data['metrics']['numHostsWithOpenBugs'] += 1
 	# Write a JS(ON) file
 	print 'Writing masterbugtable.js'
 	f = open('../data/masterbugtable.js', 'w')
