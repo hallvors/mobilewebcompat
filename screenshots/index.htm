@@ -12,8 +12,9 @@
 		<script type="text/javascript">
             var country = /cctld=(.+)/.test(location.search) ? RegExp.$1 : 'za';
             var dataurl = 'http://hallvord.com/temp/moz/' + country + '/comp/'; // location.pathname.indexOf(country+'/comp/') > -1 ? './' : country+'/comp/';
+            var mark_rev_url = 'http://hallvord.com/temp/moz/mark_done.php';
             var xhr = new XMLHttpRequest();
-      			var nick;
+      			var nick = localStorage.getItem('nick') || '';
             if (!('withCredentials' in xhr)) {
               document.documentElement.className = 'show_err';
               document.getElementsByClassName('err')[0].firstChild.data = 'Your browser does not support CORS (cross-origin XMLHttpRequest). Use a newer web browser to make this page work.';
@@ -95,12 +96,9 @@
 
               function go() {
                 img.src = dataurl + imagelist[i].name;
-                console.log(img.complete);
                 var img2 = new Image(); img2.src = img.src;
-                console.log(img2.complete)
                 if(!img2.complete){
                   document.body.classList.add('show_loading');
-                  console.log('show_loading '+document.body.className);
                   img2.onload = function(){
                     document.body.classList.remove('show_loading');
                   }
@@ -176,10 +174,22 @@
               };
 
               document.onclick = function (e) {
-                if (e.target.id === 'prev')
+                if (e.target.id === 'prev'){
                   setIndex(true), e.preventDefault();
-                if (e.target.id === 'next')
+                }else if (e.target.id === 'next'){
                   setIndex(), e.preventDefault();
+                }else if(e.target.id === 'mark_rev'){
+                  var x = new XMLHttpRequest();
+                  x.open('GET', mark_rev_url + '?cctld=' + country + '&imgidx=' + i + '&nick=' + encodeURIComponent(nick), true);
+                  x.send();
+                  var d = new Date();
+                  imagelist[i].reviewed = d.getFullYear() + '-' + (d.getMonth()+1) + '-' + d.getDate();
+                  imagelist[i].reviewer = nick;
+                  var star8 = document.getElementsByClassName('star8')[0];
+                  star8.style.display='';
+                  star8.firstChild.textContent = 'Reviewed\n' + imagelist[i].reviewed + (imagelist[i].reviewer ? ' by ' + imagelist[i].reviewer : '');
+                  e.preventDefault();
+                }
               };
 
               window.checkHttpHeaders = function () {
