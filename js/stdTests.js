@@ -32,6 +32,7 @@ function hasVideoTags(){
 }
 
 function pageWidthFitsScreen(){
+    if(!document.body)return 'delay-and-retry';
     var docwidth = Math.max(document.body.scrollWidth, document.documentElement.scrollWidth);
     if(docwidth > (window.innerWidth * 1.02))return false; // page is more than 2 percentage points wider than than window width
     return true;
@@ -71,7 +72,7 @@ function cssCheck(classNameList, propertiesThatMustExist){
         for(var elms = document.getElementsByClassName(cn), j=0, el; el=elms[j]; j++){
             var style = getComputedStyle(el,null);
             for(var k=0, prop; prop = propertiesThatMustExist[k]; k++){
-                if( typeof style[k] === string && ! ( style[k] in cssFalseishStuff) )return true;
+                if( typeof style[k] === 'string' && ! ( style[k] in cssFalseishStuff) )return true;
             }
         }
     }
