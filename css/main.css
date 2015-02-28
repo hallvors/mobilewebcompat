@@ -124,7 +124,8 @@ h4 {font-size: 24px; letter-spacing: -0.25px; line-height: 100%;}
 .list-status-graph a{display: inline-block; height: 2em;margin:0;padding:0;overflow:hidden; color: #fff}
 .list-status-graph .open{background-color: #700}
 .list-status-graph .resolved{background-color: #070}
-.list-status-graph .contacted{background-color: #FC0}
+.list-status-graph .contacted{background-color: orange}
+.list-status-graph .contactready{background-color: #FC0}
 .chart-canvas-parent, .chart-canvas-parent canvas{width: 100%}
 #metrics{
 	text-align:center;
@@ -179,6 +180,9 @@ h4 {font-size: 24px; letter-spacing: -0.25px; line-height: 100%;}
 }
 .nested-bug-table td:first-child{
 	width: 8%;
+}
+.nested-bug-table td.summary{
+	width: 66%;
 }
 .nested-bug-table td{
 	text-align: left; height: 1em; overflow: hidden;
