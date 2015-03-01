@@ -28,9 +28,6 @@ table {
 	border-radius: 5px;
 	border: 1px solid black;
 }
-tr {
-	background-color: white;
-}
 
 .desktop-site {
 	background-color: #CCCCCC;
@@ -187,6 +184,10 @@ h4 {font-size: 24px; letter-spacing: -0.25px; line-height: 100%;}
 .nested-bug-table td{
 	text-align: left; height: 1em; overflow: hidden;
 }
+.nested-bug-table col.bugnum{width: 7em;}
+.nested-bug-table col.summary{width: 60%;}
+.nested-bug-table col.state{width: 10%;background: #eee}
+
 .list-details-subtable>tbody>tr>td{
 	border-bottom: 1px solid grey;
 }
