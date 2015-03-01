@@ -10,7 +10,7 @@
 # IE's compatview lists
 
 #TODO Static pages :
-# test results
+
 # todo-lists (including "recontact" sitewait that hasn't been touched for a while)
 # include webcompat.com issues
 # screenshots?
@@ -27,6 +27,8 @@ socket.setdefaulttimeout(240) # Seconds. Loading Bugzilla searches can be slow
 import tldextract
 import cgi
 import pdb
+from datetime import datetime
+from webcompat_data_exporter import get_webcompat_data
 
 stackato_fs_path = os.environ.get('STACKATO_FILESYSTEM') # path to files or None
 
@@ -38,10 +40,6 @@ os.chdir(os.path.dirname(os.path.abspath(__file__))) # For CRON usage..
 conf = { 'weWantSubdomainsFor': r'(\.google\.com|\.live\.com|\.yahoo\.com|go\.com|\.js$)',  # the latter is not, strictly speaking, a subdomain..
 'load_remote_bz_data': False }
 
-f = open('../data/toplists.js', 'r')
-tmp = f.read()
-f.close()
-list_details = json.loads(tmp[tmp.index('['):])
 
 # http://stackoverflow.com/questions/8230315/python-sets-are-not-json-serializable :-(
 class SetEncoder(json.JSONEncoder):
@@ -58,7 +56,7 @@ masterBugTable = {'hostIndex':{}, 'bugs':{}, 'lists':{}}
 
 def main():
 	if conf['load_remote_bz_data']:
-		urltemplate = 'https://bugzilla.mozilla.org/bzapi/bug?component=Mobile&product=Tech%20Evangelism&component=Desktop&include_fields=id,summary,creation_time,last_change_time,status,resolution,depends_on,whiteboard,cf_last_resolved,url,priority' # removed ",flags" to work around bugzilla bug..
+		urltemplate = 'https://bugzilla.mozilla.org/bzapi/bug?component=Mobile&product=Tech%20Evangelism&component=Desktop&include_fields=id,summary,creation_time,last_change_time,status,resolution,depends_on,whiteboard,cf_last_resolved,url,priority,op_sys' # removed ",flags" to work around bugzilla bug..
 		bzdata = get_remote_file(urltemplate, True)
 		try:
 			f = open('data/bz-cache.json', 'w')
@@ -72,7 +70,31 @@ def main():
 		f = open('data/bz-cache.json', 'r')
 		bzdataobj = json.load(f)
 		f.close()
-
+	# Make sure we record that these bugs are from Bugzilla..
+	for bug in bzdataobj['bugs']:
+		bug['link'] = 'https://bugzilla.mozilla.org/show_bug.cgi?id=%s' % bug['id']
+	# merge in webcompat.com data
+	webcompat_data = get_webcompat_data()[1]
+	for bug in webcompat_data['bugs']:
+		if 'firefox' not in bug['whiteboard']:
+			continue
+		bug['link'] = 'https://webcompat.com/issues/%s' % bug['id']
+		bzdataobj['bugs'].append(bug)
+	# Read list names (toplists.js)
+	f = open('../data/toplists.js', 'r')
+	tmp = f.read()
+	f.close()
+	list_details = json.loads(tmp[tmp.index('['):])
+	# find and process latest test data
+	f = open('../data/testing/index.json', 'r')
+	tmp = f.read()
+	f.close()
+	test_file_index = json.loads(tmp)
+	f = open('../data/testing/%s' % test_file_index[-1], 'r')
+	test_data = {}
+	test_reader = csv.reader(f)
+	for line in test_reader:
+		test_data[line[0]] = {"bug":line[0], "test_date":line[1], "ua":line[2], "test_state":line[3]}
 	# reading our lists of regionally important sites
 	for fn in glob.glob('..' + os.sep +'data' + os.sep + '*.json'):
 		f = open(fn)
@@ -114,7 +136,7 @@ def main():
 				masterBugTable['hostIndex'][host] = {'open':[], 'resolved':[]}
 				metrics['totalUniqueHosts'].add(host)
 
-			if bug['status'] in ['RESOLVED', 'CLOSED', 'VERIFIED'] :
+			if bug['status'] in ['RESOLVED', 'CLOSED', 'VERIFIED']:
 				masterBugTable['hostIndex'][host]['resolved'].append(bug['id'])
 			else:
 				masterBugTable['hostIndex'][host]['open'].append(bug['id'])
@@ -138,7 +160,7 @@ def main():
 				if len(masterBugTable['hostIndex'][domain]['open']) > 0:
 					the_list_data['metrics']['numHostsWithOpenBugs'] += 1
 		# Generate static HTML file for the list
-		write_list_html(the_list, masterBugTable, find_list_details(the_list, list_details))
+		write_list_html(the_list, masterBugTable, find_list_details(the_list, list_details), test_data)
 	# Write a JS(ON) file
 	print 'Writing masterbugtable.js'
 	f = open('../data/masterbugtable.js', 'w')
@@ -172,9 +194,7 @@ def main():
 			f.close()
 	return;
 
-def write_list_html(listname, masterBugTable, list_data):
-	# TODO: test data!
-	print(listname)
+def write_list_html(listname, masterBugTable, list_data, test_data):
 	listname = str(listname) # some names are numeric but this code requires strings..
 	list_data['name'] = str(list_data['name'])
 	html = """<!DOCTYPE html><head><meta charset="utf-8">
@@ -185,14 +205,17 @@ def write_list_html(listname, masterBugTable, list_data):
 </head>
 	<body><h1>%s</h1>
 	""" % (list_data['name'],list_data['name'])
-	bug_template = """<tr class="{state}"><td><a href="https://bugzilla.mozilla.org/show_bug.cgi?id={bug_id}">{bug_id}</a></td><td class="summary"><a title="{bug_summary}" href="https://bugzilla.mozilla.org/show_bug.cgi?id={bug_id}">{bug_summary}</a></td><td>{step}</td><td><span class="testres {test_state}">{test_age} <strong>▪ {test_state}</strong></span></td></tr>""".decode('utf_8')
+	bug_template = """<tr class="{state}"><td><a href="{bug_link}">{bug_id}</a></td><td><a title="{bug_summary}" href="{bug_link}">{bug_summary}</a></td><td>{step}</td><td><span class="testres {test_classname}">{test_age} <strong>▪ {test_state}</strong></span></td></tr>""".decode('utf_8')
 	site_template = """
-	<tr><td><a class="sitelink" title="{hostname}" href="http://{hostname}" target="_blank">→ </a>{hostname}</td><td><table class="nested-bug-table">
+	<tr><td><a class="sitelink" title="{hostname}" href="http://{hostname}" target="_blank">→ </a>{hostname}</td><td><table class="nested-bug-table"><colgroup><col class="bugnum"><col class="summary"><col class="state"><col class="testing"></colgroup>
 		{bugdata}
 	</table></td></tr>
 	""".decode('utf_8')
+	task_template = """<li>[{difficulty}] {desc} - <a href="{link}">Accept task!</a></li>""".decode('utf_8')
+	tasks = {"easy":[],"medium":[],"hard":[]}
 	site_html = []
 	bug_html = []
+	task_html = []
 	resolved = []
 	contacted = {}
 	contactready = {}
@@ -202,19 +225,46 @@ def write_list_html(listname, masterBugTable, list_data):
 			# We have a host with known open or closed bugs..
 			for bug in masterBugTable['hostIndex'][hostname]['open']:
 				bug_data = masterBugTable['bugs'][bug]
+				test_state = '[test missing]'
+				test_classname = ''
+				test_age = ''
+				if str(bug) in test_data:
+					if test_data[str(bug)]['test_state'] == 'true':
+						test_state = 'Might be fixed!'
+						test_classname = 'pass'
+						tasks['easy'].append({'desc':'Check if %s is fixed - a test is passing, we should have a look' % bug, 'link': bug_data['link'], 'difficulty':'easy'})
+					elif test_data[str(bug)]['test_state'] == 'false':
+						test_state = 'fail'
+						test_classname = 'fail'
+					else:
+						test_state = test_data[str(bug)]['test_state']
+						test_classname = 'fail'
+					test_age = 'Tested %s, ' % timesince(datetime.strptime(test_data[str(bug)]['test_date'], '%Y-%m-%d %H:%M:%S'))
+				else:
+					tasks['hard'].append({'desc':'Write a new test for bug %s' % bug, 'link':'https://github.com/hallvors/sitecomptester-extension/#test-format', 'difficulty':'hard'})
 				if 'whiteboard' in bug_data:
 					if '[contactready]' in bug_data['whiteboard']:
 						contactready[str(bug)] = bug_data
-						bug_html.append(bug_template.format(**{"state":"open", "step": "contactready", "bug_id":bug, "bug_summary":cgi.escape(bug_data["summary"]), "test_state":"", "test_age":""}))
+						bug_html.append(bug_template.format(**{"bug_id":bug, "state":"open", "step": "contactready", "bug_link":bug_data['link'], "bug_summary":cgi.escape(bug_data["summary"]), "test_state":test_state, "test_classname": test_classname, "test_age":test_age}))
+						tasks['medium'].append({'desc':'Contact %s about bug %s' % (hostname, bug), 'link':bug_data['link'], 'difficulty':'medium'})
 					elif '[sitewait]' in bug_data['whiteboard']:
 						contacted[str(bug)] = bug_data
-						bug_html.append(bug_template.format(**{"state":"open", "step": "sitewait", "bug_id":bug, "bug_summary":cgi.escape(bug_data["summary"]), "test_state":"", "test_age":""}))
+						bug_html.append(bug_template.format(**{"bug_id":bug, "state":"open", "step": "sitewait", "bug_link":bug_data['link'], "bug_summary":cgi.escape(bug_data["summary"]), "test_state":test_state, "test_classname": test_classname, "test_age":test_age}))
+						# encourage visitors to re-contact bugs that have been in sitewait for a while
+						age_since_change = datetime.utcnow() - datetime.strptime(bug_data['last_change_time'], '%Y-%m-%dT%H:%M:%SZ')
+						if age_since_change.days > 60:
+							tasks['medium'].append({'desc': 'Try to contact %s once more about %s' % (hostname, bug), 'link':bug_data['link'], 'difficulty':'medium'})
 					else: # not analysed yet?
 						open_bugs[str(bug)] = bug_data
-						bug_html.append(bug_template.format(**{"state":"open", "step": "needsanalysis", "bug_id":bug, "bug_summary":cgi.escape(bug_data["summary"]), "test_state":"", "test_age":""}))
+						bug_html.append(bug_template.format(**{"bug_id":bug, "state":"open", "step": "needsanalysis", "bug_link":bug_data['link'], "bug_summary":cgi.escape(bug_data["summary"]), "test_state":test_state, "test_classname": test_classname, "test_age":test_age}))
+						tasks['easy'].append({'desc':'Check if bug %s happens for you, perhaps also analyze to figure out why it fails' % bug, 'link':bug_data['link'], 'difficulty':'easy'})
+
 			if len(masterBugTable['hostIndex'][hostname]['open']):
 				site_html.append(site_template.format(**{"hostname": str(hostname), "bugdata": "\n".join(bug_html)}))
 			resolved.extend(masterBugTable['hostIndex'][hostname]['resolved'])
+			# We also go through the resolved ones to see if any of them has a failing test
+			for bug in masterBugTable['hostIndex'][hostname]['resolved']:
+				pass
 		bug_html = []
 	perc_resolved = int((len(resolved) * 100) / (masterBugTable['lists'][listname]['metrics']['numOpenBugs'] + masterBugTable['lists'][listname]['metrics']['numClosedBugs']))
 	perc_contacted = int((len(contacted) * 100) / (masterBugTable['lists'][listname]['metrics']['numOpenBugs'] + masterBugTable['lists'][listname]['metrics']['numClosedBugs']))
@@ -233,7 +283,12 @@ def write_list_html(listname, masterBugTable, list_data):
 			<a class="open" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d open</a>
 		</div></td></tr>
 	""" % (','.join(map(str,resolved)), perc_resolved, len(resolved), ','.join(contacted.keys()), perc_contacted, len(contacted), ','.join(contactready.keys()), perc_contactready, len(contactready), ','.join(open_bugs.keys()), perc_open_bugs, len(open_bugs))
-
+	for task in tasks['easy']:
+		task_html.append(task_template.format(**task))
+	for task in tasks['medium']:
+		task_html.append(task_template.format(**task))
+	for task in tasks['hard']:
+		task_html.append(task_template.format(**task))
 	f = open('../lists/%s.html' % listname, 'w')
 	f.write(html.encode('utf_8'))
 	f.write('\n')
@@ -242,7 +297,11 @@ def write_list_html(listname, masterBugTable, list_data):
 	f.write(table.encode('utf_8'))
 	f.write('\n')
 	f.write('\n'.join(site_html).encode('utf_8'))
-	f.write('</table></body></html>')
+	f.write('</table>')
+	f.write('\n<h2>Tasks</h2><ul>')
+	f.write('\n'.join(task_html).encode('utf_8'))
+	f.write('</ul>')
+	f.write('</body></html>')
 	f.write('\n')
 	f.close()
 
@@ -300,6 +359,33 @@ def get_remote_file(url, req_json=False):
 #	req.add_header('User-agent', 'Mozilla/5.0 (Windows NT 5.1; rv:27.0) Gecko/20100101 Firefox/27.0')
 	bzresponse = urllib2.urlopen(req, timeout=240)
 	return bzresponse.read()
+
+# Next method is from http://flask.pocoo.org/snippets/33/
+def timesince(dt, default="just now"):
+    """
+    Returns string representing "time since" e.g.
+    3 days ago, 5 hours ago etc.
+    """
+
+    now = datetime.utcnow()
+    diff = now - dt
+
+    periods = (
+        (diff.days / 365, "year", "years"),
+        (diff.days / 30, "month", "months"),
+        (diff.days / 7, "week", "weeks"),
+        (diff.days, "day", "days"),
+        (diff.seconds / 3600, "hour", "hours"),
+        (diff.seconds / 60, "minute", "minutes"),
+        (diff.seconds, "second", "seconds"),
+    )
+
+    for period, singular, plural in periods:
+
+        if period:
+            return "%d %s ago" % (period, singular if period == 1 else plural)
+
+    return default
 
 def get_ie_data():
 	# IE site patching lists:
