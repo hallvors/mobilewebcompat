@@ -38,7 +38,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__))) # For CRON usage..
 # conf['weWantSubdomainsFor'] is a list of hostnames that should not be reduced to domain names. For these, we'll strip any *www.* prefix, but
 # no other subdomains. (Another option is to only strip www - might work too)
 conf = { 'weWantSubdomainsFor': r'(\.google\.com|\.live\.com|\.yahoo\.com|go\.com|\.js$)',  # the latter is not, strictly speaking, a subdomain..
-'load_remote_bz_data': False }
+'load_remote_bz_data': True }
 
 
 # http://stackoverflow.com/questions/8230315/python-sets-are-not-json-serializable :-(
@@ -73,12 +73,14 @@ def main():
 	# Make sure we record that these bugs are from Bugzilla..
 	for bug in bzdataobj['bugs']:
 		bug['link'] = 'https://bugzilla.mozilla.org/show_bug.cgi?id=%s' % bug['id']
+		bug['test_id'] = '%s' % bug['id'] # Bugzilla issues are referenced by bug number in sitedata.js
 	# merge in webcompat.com data
 	webcompat_data = get_webcompat_data()[1]
 	for bug in webcompat_data['bugs']:
 		if 'firefox' not in bug['whiteboard']:
 			continue
 		bug['link'] = 'https://webcompat.com/issues/%s' % bug['id']
+		bug['test_id'] = 'wc%s' % bug['id'] # webcompat.com issues are referenced by wc plus bug number in sitedata.js
 		bzdataobj['bugs'].append(bug)
 	# Read list names (toplists.js)
 	f = open('../data/toplists.js', 'r')
@@ -228,18 +230,19 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 				test_state = '[test missing]'
 				test_classname = ''
 				test_age = ''
-				if str(bug) in test_data:
-					if test_data[str(bug)]['test_state'] == 'true':
+				if str(bug_data['test_id']) in test_data:
+					this_test_data = test_data[str(bug_data['test_id'])]
+					if this_test_data['test_state'] == 'true':
 						test_state = 'Might be fixed!'
 						test_classname = 'pass'
 						tasks['easy'].append({'desc':'Check if %s is fixed - a test is passing, we should have a look' % bug, 'link': bug_data['link'], 'difficulty':'easy'})
-					elif test_data[str(bug)]['test_state'] == 'false':
+					elif this_test_data['test_state'] == 'false':
 						test_state = 'fail'
 						test_classname = 'fail'
 					else:
-						test_state = test_data[str(bug)]['test_state']
+						test_state = this_test_data['test_state']
 						test_classname = 'fail'
-					test_age = 'Tested %s, ' % timesince(datetime.strptime(test_data[str(bug)]['test_date'], '%Y-%m-%d %H:%M:%S'))
+					test_age = 'Tested %s, ' % timesince(datetime.strptime(this_test_data['test_date'], '%Y-%m-%d %H:%M:%S'))
 				else:
 					tasks['hard'].append({'desc':'Write a new test for bug %s' % bug, 'link':'https://github.com/hallvors/sitecomptester-extension/#test-format', 'difficulty':'hard'})
 				if 'whiteboard' in bug_data:
@@ -298,7 +301,7 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 	f.write('\n')
 	f.write('\n'.join(site_html).encode('utf_8'))
 	f.write('</table>')
-	f.write('\n<h2>Tasks</h2><ul>')
+	f.write('\n<h2>Tasks</h2>\n<p>Please note: data from Bugzilla is updated once an hour. If you complete one of these tasks it will not disappear from the list immediately, but should within one hour during the next data update. :)</p>\n<ul>')
 	f.write('\n'.join(task_html).encode('utf_8'))
 	f.write('</ul>')
 	f.write('</body></html>')
