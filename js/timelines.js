@@ -17,7 +17,6 @@
 */
 
 var flagThesePris =  {'P1':1,'P2':2}
-var bz_show_bug = 'https://bugzilla.mozilla.org/show_bug.cgi?id=';
 var bz_list_specific_bug = 'https://bugzilla.mozilla.org/buglist.cgi?bug_id=';
 var resolvedStates = {'RESOLVED':1,'CLOSED':1,'VERIFIED':1};
 var testResults = {}; // automated test results, per bug
@@ -138,7 +137,7 @@ function updateTodoRow(div, todos, direction){
 	}else{
 	}
 	a.firstChild.data = todos[idx][0];
-	a.href = bz_show_bug + todos[idx][1];
+	a.href = todos[idx][1];
 	var counter = div.getElementsByTagName('span')[0] || div.appendChild(document.createElement('span'));
 	counter.textContent=' ('+(idx+1)+'/'+todos.length+')';
 }
@@ -188,7 +187,7 @@ function regressionTable(){
 			bug = shifts[i].bug;
 			tr = tb.appendChild(document.createElement('tr'));
 			if(shifts[i].type)tr.classList.add(shifts[i].type);
-			a = tr.appendChild(elm('th', '', {className:'title'})).appendChild(elm('a', bug +' '+(masterBugTable.bugs[bug]?masterBugTable.bugs[bug].summary:''), {href:bz_show_bug+bug} ));
+			a = tr.appendChild(elm('th', '', {className:'title'})).appendChild(elm('a', bug +' '+(masterBugTable.bugs[bug]?masterBugTable.bugs[bug].summary:''), {href:masterBugTable.bugs[bug].link} ));
 			a.parentNode.appendChild(elm('br'));
 			a.parentNode.appendChild(elm('a', 'View test code', {onclick:showTestCode, className:'viewcode', href:'https://github.com/hallvors/sitecomptester-extension/blob/master/data/sitedata.js#'+bug })); /* this hash is a noop on GitHub, sorry.. */
 			td = tr.appendChild(elm('td'));
@@ -492,10 +491,10 @@ function calculateListDetails(tr, list, excludeUS){
 					});
 				}
 				if(bug.status === 'NEW' && bug.whiteboard.indexOf('[contactready]')>-1){
-					todos.push( ['Contact '+site+' regarding "'+bug.summary+'"', bug.id, bug.priority] );
+					todos.push( ['Contact '+site+' regarding "'+bug.summary+'"', bug.link, bug.priority] );
 				}else if((bug.status === 'UNCONFIRMED' || ( ! /\[((not|)contactready|sitewait|(server|client)sniff)\]/.test(bug.whiteboard) )) && ! hasNeedInfoFlag ){
 					// We ignore bugs that have: notcontactready, contactready, sitewait, serversniff, clientsniff labels in whiteboard, and bugs with a 'needinfo' flag
-					todos.push( ['Analyze "'+bug.summary+'" problem on '+site, bug.id, bug.priority] );
+					todos.push( ['Analyze "'+bug.summary+'" problem on '+site, bug.link, bug.priority] );
 				}
 			}
 			for(var j=0, bug; bug=masterBugTable.hostIndex[site].resolved[j]; j++){
@@ -532,7 +531,7 @@ function calculateListDetails(tr, list, excludeUS){
 			(function(todos){
 			var d = tr.getElementsByTagName('td')[1].appendChild(document.createElement('div'));
 			d.className = 'todo';
-			d.appendChild(document.createElement('a')).href = bz_show_bug+todos[0][1];
+			d.appendChild(document.createElement('a')).href = todos[0][1];
 			d.firstChild.appendChild(document.createTextNode(todos[0][0]));
 			d.appendChild(document.createElement('hr'));
 			var b = d.appendChild(elm('button', '<<'));
@@ -546,11 +545,11 @@ function addBugTableCell(bugtable, bug, bindex){
 	bug = masterBugTable.bugs[bug];
 	var bugrow = bugtable.appendChild(document.createElement('tr'));
 	bugrow.appendChild(document.createElement('td'));
-	var a = bugrow.lastChild.appendChild(elm('a', bug.id, {href:bz_show_bug+bug.id}));
+	var a = bugrow.lastChild.appendChild(elm('a', bug.id, {href:bug.link}));
 	var resolved = bug.status in resolvedStates;
 	bugrow.classList.add(resolved?'resolved':'open')
 	bugrow.appendChild(document.createElement('td'));
-	var a = bugrow.lastChild.appendChild(elm('a', bug.summary, {href:bz_show_bug+bug.id, title:bug.summary}));
+	var a = bugrow.lastChild.appendChild(elm('a', bug.summary, {href:bug.link, title:bug.summary}));
 	if(resolved)a.appendChild(document.createTextNode(' - '+bug.status+':'+bug.resolution));
 	if(bug.priority in flagThesePris)a.className = 'major-issue';
 	bugrow.appendChild(document.createElement('td'));

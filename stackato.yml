@@ -2,9 +2,9 @@ name: arewecompatibleyet
 framework:
     type: python
 processes:
-    web: $STACKATO_UWSGI --static-map /css/=$HOME/css/ --static-map /js/=$HOME/js/ --static-map /images/=$HOME/images/ --static-map /data/=$HOME/data/
+    web: $STACKATO_UWSGI --static-map /css/=$HOME/css/ --static-map /js/=$HOME/js/ --static-map /images/=$HOME/images/ --static-map /lists/=$HOME/lists/ --static-map /data/=$HOME/data/ --static-map /screenshots/index.html=$HOME/screenshots/index.html --static-map /screenshots/js/=$HOME/screenshots/js/ --static-map /screenshots/css/=$HOME/screenshots/css/ --static-map /images/screenshots/=$STACKATO_FILESYSTEM/screenshots/ --static-map /files/=/files/
 cron:
-     - "0	2,6,10,14,18,22	*	*	*	cd $HOME/preproc; /usr/bin/python buildlists.py"
+     - "0	2,6,10,14,18,22	*	*	*	cd $HOME/preproc; /usr/bin/python buildlists.py > cron.log 2>&1"
 ignores: ["tmp", ".git", "update.bat"]
 url:
      - arewecompatibleyet.com.paas.mozilla.org
@@ -14,5 +14,11 @@ requirements:
     pypm:
       - tldextract
       - requests
+      - slimit
+
 services:
   ${name}-files: filesystem
+
+hooks:
+  post-staging:
+    - ln -s "$STACKATO_FILESYSTEM"/ files

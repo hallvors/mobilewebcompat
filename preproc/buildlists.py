@@ -11,13 +11,10 @@
 
 #TODO Static pages :
 
-# todo-lists (including "recontact" sitewait that hasn't been touched for a while)
-# include webcompat.com issues
-# screenshots?
-# misc test data?
-# "maybe" issues?
-# /sites/example.com.html with further details?
-# hook screenshot review into /sites/example.com system?
+# show misc test data?
+# "maybe" issues? "site x had different redirects for different UAs, no bug is reported (yet)"
+# /sites/example.com.html with further details for all 4000+ sites?
+# hook screenshot review into /sites/example.com pages?
 
 import json, glob, urllib, os, urllib2,csv,StringIO,re, sys, time
 from pprint import pprint
@@ -38,7 +35,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__))) # For CRON usage..
 # conf['weWantSubdomainsFor'] is a list of hostnames that should not be reduced to domain names. For these, we'll strip any *www.* prefix, but
 # no other subdomains. (Another option is to only strip www - might work too)
 conf = { 'weWantSubdomainsFor': r'(\.google\.com|\.live\.com|\.yahoo\.com|go\.com|\.js$)',  # the latter is not, strictly speaking, a subdomain..
-'load_remote_bz_data': True }
+'load_remote_bz_data': True, 'load_webcompat_bugs': True }
 
 
 # http://stackoverflow.com/questions/8230315/python-sets-are-not-json-serializable :-(
@@ -74,14 +71,28 @@ def main():
 	for bug in bzdataobj['bugs']:
 		bug['link'] = 'https://bugzilla.mozilla.org/show_bug.cgi?id=%s' % bug['id']
 		bug['test_id'] = '%s' % bug['id'] # Bugzilla issues are referenced by bug number in sitedata.js
-	# merge in webcompat.com data
-	webcompat_data = get_webcompat_data()[1]
+	if conf['load_webcompat_bugs']:
+		# merge in webcompat.com data
+		webcompat_data = get_webcompat_data()[1]
+		try:
+			f = open('data/wc-cache.json', 'w')
+			f.write(json.dumps(webcompat_data).encode('utf_8'))
+			f.close()
+		except:
+			print('wot?')
+	else:
+		print('Warning: using cached webcompat data')
+		f = open('data/wc-cache.json', 'r')
+		webcompat_data = json.load(f)
+		f.close()
+
 	for bug in webcompat_data['bugs']:
 		if 'firefox' not in bug['whiteboard']:
 			continue
 		bug['link'] = 'https://webcompat.com/issues/%s' % bug['id']
 		bug['test_id'] = 'wc%s' % bug['id'] # webcompat.com issues are referenced by wc plus bug number in sitedata.js
 		bzdataobj['bugs'].append(bug)
+
 	# Read list names (toplists.js)
 	f = open('../data/toplists.js', 'r')
 	tmp = f.read()
@@ -97,13 +108,16 @@ def main():
 	test_reader = csv.reader(f)
 	for line in test_reader:
 		test_data[line[0]] = {"bug":line[0], "test_date":line[1], "ua":line[2], "test_state":line[3]}
+	f.close()
 	# reading our lists of regionally important sites
 	for fn in glob.glob('..' + os.sep +'data' + os.sep + '*.json'):
 		f = open(fn)
 		data = json.load(f)
 		f.close()
 		listname = os.path.splitext(os.path.basename(fn))[0]
-
+		# get the pretty name for this list too
+		tmp = find_list_details(listname, list_details)
+		data['fancyname'] = tmp['name']
 		if listname:
 			masterBugTable['lists'][listname] = data
 			masterBugTable['lists'][listname]['metrics']={'numOpenBugs':0, 'numClosedBugs':0, 'numHostsWithOpenBugs': 0}
@@ -125,7 +139,7 @@ def main():
 	for bug in bzdataobj['bugs']:
 		if re.search(r'\[meta\]', bug['summary'], re.I) : # We don't care about [meta] stuff. Why? Well, we're post-post-modern, that's why.
 			continue
-		masterBugTable['bugs'][bug['id']] = bug;
+		masterBugTable['bugs'][bug['test_id']] = bug;
 		# extract host names:
 		hostnames = set()
 		if 'url' in bug:
@@ -139,10 +153,10 @@ def main():
 				metrics['totalUniqueHosts'].add(host)
 
 			if bug['status'] in ['RESOLVED', 'CLOSED', 'VERIFIED']:
-				masterBugTable['hostIndex'][host]['resolved'].append(bug['id'])
+				masterBugTable['hostIndex'][host]['resolved'].append(bug['test_id'])
 			else:
-				masterBugTable['hostIndex'][host]['open'].append(bug['id'])
-				metrics['allOpenBugsForAllLists'].add(bug['id'])
+				masterBugTable['hostIndex'][host]['open'].append(bug['test_id'])
+				metrics['allOpenBugsForAllLists'].add(bug['test_id'])
 				metrics['hostsWithOpenBugs'].add(host)
 			# Done looking at bug status, updating structures and calculating metrics
 		# Done processing each host mentioned for this bug
@@ -205,15 +219,20 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 	<link rel="stylesheet" href="https://www.mozilla.org/en-US/tabzilla/media/css/tabzilla.css"></link>
 	<link lang="text/css" href="../css/main.css" rel="stylesheet"></link>
 </head>
-	<body><h1>%s</h1>
+	<body><div id="wrapper">
+<a href="http://www.mozilla.org/" id="tabzilla">mozilla</a>
+<h1>%s</h1>
 	""" % (list_data['name'],list_data['name'])
 	bug_template = """<tr class="{state}"><td><a href="{bug_link}">{bug_id}</a></td><td><a title="{bug_summary}" href="{bug_link}">{bug_summary}</a></td><td>{step}</td><td><span class="testres {test_classname}">{test_age} <strong>▪ {test_state}</strong></span></td></tr>""".decode('utf_8')
 	site_template = """
-	<tr><td><a class="sitelink" title="{hostname}" href="http://{hostname}" target="_blank">→ </a>{hostname}</td><td><table class="nested-bug-table"><colgroup><col class="bugnum"><col class="summary"><col class="state"><col class="testing"></colgroup>
+	<tr><td>
+		<a class="sitelink" title="More information about {hostname}" href="/site/{hostname}">🔎 </a>
+		<a class="sitelink" title="{hostname}" href="http://{hostname}" target="_blank">→ </a>
+		{hostname}</td><td><table class="nested-bug-table"><colgroup><col class="bugnum"><col class="summary"><col class="state"><col class="testing"></colgroup>
 		{bugdata}
 	</table></td></tr>
 	""".decode('utf_8')
-	task_template = """<li>[{difficulty}] {desc} - <a href="{link}">Accept task!</a></li>""".decode('utf_8')
+	task_template = """<li>[{difficulty}] {desc} - <a href="/taskdetails/?bug={bug}&type={type}&link={link}&desc={desc}">Accept task!</a></li>""".decode('utf_8')
 	tasks = {"easy":[],"medium":[],"hard":[]}
 	site_html = []
 	bug_html = []
@@ -235,7 +254,7 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 					if this_test_data['test_state'] == 'true':
 						test_state = 'Might be fixed!'
 						test_classname = 'pass'
-						tasks['easy'].append({'desc':'Check if %s is fixed - a test is passing, we should have a look' % bug, 'link': bug_data['link'], 'difficulty':'easy'})
+						tasks['easy'].append({'desc':'Check if %s is fixed - a test is passing, we should have a look' % bug_data['id'], 'bug':bug_data['id'], 'type':'check', 'link': bug_data['link'], 'difficulty':'easy'})
 					elif this_test_data['test_state'] == 'false':
 						test_state = 'fail'
 						test_classname = 'fail'
@@ -244,29 +263,36 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 						test_classname = 'fail'
 					test_age = 'Tested %s, ' % timesince(datetime.strptime(this_test_data['test_date'], '%Y-%m-%d %H:%M:%S'))
 				else:
-					tasks['hard'].append({'desc':'Write a new test for bug %s' % bug, 'link':'https://github.com/hallvors/sitecomptester-extension/#test-format', 'difficulty':'hard'})
+					tasks['hard'].append({'desc':'Write a new test for bug %s' % bug_data['id'], 'bug':bug_data['id'], 'type':'writetest', 'link':bug_data['link'], 'difficulty':'hard'})
 				if 'whiteboard' in bug_data:
 					if '[contactready]' in bug_data['whiteboard']:
 						contactready[str(bug)] = bug_data
 						bug_html.append(bug_template.format(**{"bug_id":bug, "state":"open", "step": "contactready", "bug_link":bug_data['link'], "bug_summary":cgi.escape(bug_data["summary"]), "test_state":test_state, "test_classname": test_classname, "test_age":test_age}))
-						tasks['medium'].append({'desc':'Contact %s about bug %s' % (hostname, bug), 'link':bug_data['link'], 'difficulty':'medium'})
+						tasks['medium'].append({'desc':'Contact %s about bug %s' % (hostname, bug), 'bug':bug_data['id'], 'type':'contact', 'link':bug_data['link'], 'difficulty':'medium'})
 					elif '[sitewait]' in bug_data['whiteboard']:
 						contacted[str(bug)] = bug_data
 						bug_html.append(bug_template.format(**{"bug_id":bug, "state":"open", "step": "sitewait", "bug_link":bug_data['link'], "bug_summary":cgi.escape(bug_data["summary"]), "test_state":test_state, "test_classname": test_classname, "test_age":test_age}))
 						# encourage visitors to re-contact bugs that have been in sitewait for a while
 						age_since_change = datetime.utcnow() - datetime.strptime(bug_data['last_change_time'], '%Y-%m-%dT%H:%M:%SZ')
 						if age_since_change.days > 60:
-							tasks['medium'].append({'desc': 'Try to contact %s once more about %s' % (hostname, bug), 'link':bug_data['link'], 'difficulty':'medium'})
-					else: # not analysed yet?
+							tasks['medium'].append({'desc': 'Try to contact %s once more about %s - it\'s been more than two months..' % (hostname, bug), 'bug':bug_data['id'], 'type':'recontact', 'link':bug_data['link'], 'difficulty':'medium'})
+					elif bug_data['status'] != 'ASSIGNED': # not analysed yet?
 						open_bugs[str(bug)] = bug_data
 						bug_html.append(bug_template.format(**{"bug_id":bug, "state":"open", "step": "needsanalysis", "bug_link":bug_data['link'], "bug_summary":cgi.escape(bug_data["summary"]), "test_state":test_state, "test_classname": test_classname, "test_age":test_age}))
-						tasks['easy'].append({'desc':'Check if bug %s happens for you, perhaps also analyze to figure out why it fails' % bug, 'link':bug_data['link'], 'difficulty':'easy'})
+						tasks['easy'].append({'desc':'Check if bug %s happens for you' % bug_data['id'], 'bug':bug_data['id'], 'type':'check', 'link':bug_data['link'], 'difficulty':'easy'})
+						tasks['hard'].append({'desc':'Analyze bug %s to figure out why it fails' % bug_data['id'], 'bug':bug_data['id'], 'type':'analyze', 'link':bug_data['link'], 'difficulty':'hard'})
 
 			if len(masterBugTable['hostIndex'][hostname]['open']):
 				site_html.append(site_template.format(**{"hostname": str(hostname), "bugdata": "\n".join(bug_html)}))
 			resolved.extend(masterBugTable['hostIndex'][hostname]['resolved'])
 			# We also go through the resolved ones to see if any of them has a failing test
 			for bug in masterBugTable['hostIndex'][hostname]['resolved']:
+				bug_data = masterBugTable['bugs'][bug]
+				if str(bug_data['test_id']) in test_data:
+					this_test_data = test_data[str(bug_data['test_id'])]
+					if this_test_data['test_state'] != 'true' and bug_data['resolution'] in ['FIXED', 'WORKSFORME', 'CLOSED']:
+						tasks['easy'].append({'desc':'Check if bug %s regressed. It\'s supposedly fixed, but the test fails.' % bug_data['id'], 'bug':bug_data['id'], 'type':'regcheck', 'link':bug_data['link'], 'difficulty':'easy'})
+
 				pass
 		bug_html = []
 	perc_resolved = int((len(resolved) * 100) / (masterBugTable['lists'][listname]['metrics']['numOpenBugs'] + masterBugTable['lists'][listname]['metrics']['numClosedBugs']))
@@ -280,10 +306,11 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 
 	table = """<table class="list-master-table" border="1">
 		<tr><td colspan="3"><div class="list-status-graph">
-			<a class="resolved" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d resolved</a>
-			<a class="contacted" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d contacted</a>
-			<a class="contactready" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d contactready</a>
-			<a class="open" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d open</a>
+			<!-- TODO: how to link to both webcompat.com and bugzilla bugs here??? -->
+			<span class="resolved" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d resolved</span>
+			<span class="contacted" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d contacted</span>
+			<span class="contactready" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d contactready</span>
+			<span class="open" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d open</span>
 		</div></td></tr>
 	""" % (','.join(map(str,resolved)), perc_resolved, len(resolved), ','.join(contacted.keys()), perc_contacted, len(contacted), ','.join(contactready.keys()), perc_contactready, len(contactready), ','.join(open_bugs.keys()), perc_open_bugs, len(open_bugs))
 	for task in tasks['easy']:
@@ -301,10 +328,14 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 	f.write('\n')
 	f.write('\n'.join(site_html).encode('utf_8'))
 	f.write('</table>')
-	f.write('\n<h2>Tasks</h2>\n<p>Please note: data from Bugzilla is updated once an hour. If you complete one of these tasks it will not disappear from the list immediately, but should within one hour during the next data update. :)</p>\n<ul>')
-	f.write('\n'.join(task_html).encode('utf_8'))
-	f.write('</ul>')
-	f.write('</body></html>')
+	f.write('\n<h2>Tasks</h2>\n<p>Please note: data from Bugzilla is updated once an hour. If you complete one of these tasks it will not disappear from the list immediately, but should within one hour during the next data update. :) <br>TODO: make this true also for tasks like "write a test" (only disappears after next test run) and "check if bug x happens" (only disappears when bug moves to contactready or sitewait)..</p>')
+	if len(task_html) == 0:
+		f.write('\n<p><b>Congratulations!</b> Nothing to do here at the moment - check back later or help out in some other region :)</p>')
+	else:
+		f.write('\n<ul>')
+		f.write('\n'.join(task_html).encode('utf_8'))
+		f.write('\n</ul>')
+	f.write('</div></body></html>')
 	f.write('\n')
 	f.close()
 
@@ -389,43 +420,43 @@ def timesince(dt, default="just now"):
             return "%d %s ago" % (period, singular if period == 1 else plural)
 
     return default
-
-def get_ie_data():
-	# IE site patching lists:
-	iecvlist = 'https://iecvlist.microsoft.com/ie10/201206/iecompatviewlist.xml'
-	import xml.etree.ElementTree as ET
-	xmltree = ET.fromstring(get_remote_file(iecvlist))
-	#iedata = {'hostIndex':{}, 'bugs':{}, 'lists':{'iecvlist':[]}}
-	masterBugTable['lists']['iecvlist'] = {"data":[], "metrics":{"numOpenBugs": 0,"numClosedBugs": 0}}
-	i=1
-	for child in xmltree:
-		if child.tag == 'domain':
-			host = child.text.strip()
-			masterBugTable['lists']['iecvlist']['data'].append(host)
-			bug_id = 'IE-%i'%i
-			mode = '['+child.attrib['docMode']+']' if 'docMode' in child.attrib else ''
-			if len(child.attrib.keys()) == 0:
-				mode = '[renders in IE7-standard-mode or IE5-quirks-mode, depends on doctype]'
-			feat = '['+child.attrib['featureSwitch']+']' if 'featureSwitch' in child.attrib else ''
-			uaString = '['+child.attrib['uaString']+']' if 'uaString' in child.attrib else ''
-			masterBugTable['bugs'][bug_id] = {
-				"status":"NEW",
-			      "whiteboard": "%s %s %s" % (mode, feat, uaString),
-			      "url": "http://%s" % host,
-			      "depends_on": "",
-			      "last_change_time": "",
-			      "creation_time": "",
-			      "summary": "%s is on Internet Explorer compatibility view list %s %s %s" % (host, mode, feat, uaString),
-			      "priority": "--",
-			      "id": bug_id,
-			      "resolution": "",
-			      "cf_last_resolved": "",
-			      "bug_link": iecvlist
-			}
-			if not host in masterBugTable['hostIndex']:
-				masterBugTable['hostIndex'][host] = {"open":[], "resolved":[]}
-			masterBugTable['hostIndex'][host]["open"].append(bug_id)
-			i+=1
+#
+#def get_ie_data():
+#	# IE site patching lists:
+#	iecvlist = 'https://iecvlist.microsoft.com/ie10/201206/iecompatviewlist.xml'
+#	import xml.etree.ElementTree as ET
+#	xmltree = ET.fromstring(get_remote_file(iecvlist))
+#	#iedata = {'hostIndex':{}, 'bugs':{}, 'lists':{'iecvlist':[]}}
+#	masterBugTable['lists']['iecvlist'] = {"data":[], "metrics":{"numOpenBugs": 0,"numClosedBugs": 0}}
+#	i=1
+#	for child in xmltree:
+#		if child.tag == 'domain':
+#			host = child.text.strip()
+#			masterBugTable['lists']['iecvlist']['data'].append(host)
+#			bug_id = 'IE-%i'%i
+#			mode = '['+child.attrib['docMode']+']' if 'docMode' in child.attrib else ''
+#			if len(child.attrib.keys()) == 0:
+#				mode = '[renders in IE7-standard-mode or IE5-quirks-mode, depends on doctype]'
+#			feat = '['+child.attrib['featureSwitch']+']' if 'featureSwitch' in child.attrib else ''
+#			uaString = '['+child.attrib['uaString']+']' if 'uaString' in child.attrib else ''
+#			masterBugTable['bugs'][bug_id] = {
+#				"status":"NEW",
+#			      "whiteboard": "%s %s %s" % (mode, feat, uaString),
+#			      "url": "http://%s" % host,
+#			      "depends_on": "",
+#			      "last_change_time": "",
+#			      "creation_time": "",
+#			      "summary": "%s is on Internet Explorer compatibility view list %s %s %s" % (host, mode, feat, uaString),
+#			      "priority": "--",
+#			      "id": bug_id,
+#			      "resolution": "",
+#			      "cf_last_resolved": "",
+#			      "bug_link": iecvlist
+#			}
+#			if not host in masterBugTable['hostIndex']:
+#				masterBugTable['hostIndex'][host] = {"open":[], "resolved":[]}
+#			masterBugTable['hostIndex'][host]["open"].append(bug_id)
+#			i+=1
 
 if __name__ == "__main__":
     main()
