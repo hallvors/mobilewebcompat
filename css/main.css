@@ -118,11 +118,25 @@ h4 {font-size: 24px; letter-spacing: -0.25px; line-height: 100%;}
 .list-master-table .list-details-row{display:none}
 .list-master-table .list-details-row.active{display:table-row}
 .list-status-graph{border: 1px solid black; width: 100%; height: 2em; color: #fff; margin:0;padding:0}
-.list-status-graph a, .list-status-graph span{display: inline-block; height: 2em;margin:0;padding:0;overflow:hidden; color: #fff}
+.list-status-graph a, .list-status-graph span{display: block; float:left; height: 2em;margin:0;padding:0;overflow:hidden; color: #fff}
 .list-status-graph .open{background-color: #700}
 .list-status-graph .resolved{background-color: #070}
-.list-status-graph .contacted{background-color: orange}
+.list-status-graph .contacted{background-color: #083}
 .list-status-graph .contactready{background-color: #FC0}
+
+tr.contactready td:first-child{
+	background: linear-gradient(to right,#FC0, transparent 15%);
+	padding-left: 10px;
+}
+tr.needsanalysis td:first-child{
+	background: linear-gradient(to right,#700, transparent 15%);
+	padding-left: 10px;
+}
+tr.sitewait td:first-child{
+	background: linear-gradient(to right, #083, transparent 15%);
+	padding-left: 10px;
+}
+
 .chart-canvas-parent, .chart-canvas-parent canvas{width: 100%}
 #metrics{
 	text-align:center;

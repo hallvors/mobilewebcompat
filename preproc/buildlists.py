@@ -54,6 +54,18 @@ f.close()
 
 masterBugTable = {'hostIndex':{}, 'bugs':{}, 'lists':{}}
 
+def prep_action_links(action_links):
+	if len(action_links) == 0:
+		return ''
+	return '<br>How you can help: %s' % ' | '.join(action_links)
+
+def sanitize(dirty_html):
+	dirty_html = dirty_html.replace('&', '&amp;')
+	dirty_html = dirty_html.replace('<', '&lt;')
+	dirty_html = dirty_html.replace('>', '&gt;')
+	dirty_html = dirty_html.replace('"', '&quot;')
+	return dirty_html
+
 def main():
 	if conf['load_remote_bz_data']:
 		urltemplate = 'https://bugzilla.mozilla.org/bzapi/bug?component=Mobile&product=Tech%20Evangelism&component=Desktop&include_fields=id,summary,creation_time,last_change_time,status,resolution,depends_on,whiteboard,cf_last_resolved,url,priority,op_sys' # removed ",flags" to work around bugzilla bug..
@@ -226,14 +238,13 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 <a href="http://www.mozilla.org/" id="tabzilla">mozilla</a>
 <h1>%s</h1>
 	""" % (list_data['name'],list_data['name'])
-	bug_template = """<tr class="{state}"><td><a href="{bug_link}">{bug_id}</a></td><td><a title="{bug_summary}" href="{bug_link}">{bug_summary}</a><br>How you can help: {action_links}</td><td>{step}</td><td><span class="testres {test_classname}">{test_age} <strong>▪ {test_state}</strong></span></td></tr>""".decode('utf_8')
+	bug_template = """<tr class="{state} {step}"><td><a href="{bug_link}">{bug_id}</a></td><td><a title="{bug_summary}" href="{bug_link}">{bug_summary}</a>{action_links}</td><td>{step}</td><td><span class="testres {test_classname}">{test_age} <strong>▪ {test_state}</strong></span></td></tr>""".decode('utf_8')
 	site_template = """
 	<tr><td rowspan="{rowspan}">
 		<a class="sitelink" title="More information about {hostname}" href="/site/{hostname}">🔎 </a>
 		<a class="sitelink" title="{hostname}" href="http://{hostname}" target="_blank">→ </a>
-		{hostname}</td><td></tr><!--table class="nested-bug-table"><colgroup><col class="bugnum"><col class="summary"><col class="state"><col class="testing"></colgroup-->
+		{hostname}</td><td></tr>
 		{bugdata}
-	<!--/table></td></tr-->
 	""".decode('utf_8')
 	task_template = """<li>[{difficulty}] {desc} - <a href="/taskdetails/?bug={bug}&type={type}&link={link}&desc={desc}">Accept task!</a></li>""".decode('utf_8')
 	task_link_template = """<a href="/taskdetails/?bug={bug}&type={type}&link={link}&desc={desc}">{linktext}</a>""".decode('utf_8')
@@ -245,11 +256,14 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 	contacted = {}
 	contactready = {}
 	open_bugs = {}
+	all_green = []
+	long_tail = []
 	for hostname in masterBugTable['lists'][listname]['data']:
 		if hostname in masterBugTable['hostIndex']:
 			# We have a host with known open or closed bugs..
 			for bug in masterBugTable['hostIndex'][hostname]['open']:
 				bug_data = masterBugTable['bugs'][bug]
+				bug_step = ''
 				test_state = '[test missing]'
 				test_classname = ''
 				test_age = ''
@@ -259,13 +273,15 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 				diff_creation_change = last_change_time - creation_time
 				age_since_change = datetime.utcnow() - last_change_time
 				if str(bug_data['test_id']) not in test_data:
-					action_links.append(task_link_template.format(**{'bug':bug_data['id'],'type':'writetest','link':bug_data['link'],'linktext':'add test','desc':'Add test for bug %s'%bug_data['id']}))
+					action_links.append(task_link_template.format(**{'bug':bug_data['id'],'type':'writetest','link': sanitize(bug_data['link']),'linktext':'add test','desc':'Add test for bug %s'%bug_data['id']}))
+					tasks['hard'].append({'desc':'Write a new test for bug %s' % bug_data['id'], 'bug':bug_data['id'], 'type':'writetest', 'link':bug_data['link'], 'difficulty':'hard'})
 				else:
 					this_test_data = test_data[str(bug_data['test_id'])]
 					if this_test_data['test_state'] == 'true':
 						test_state = 'Might be fixed!'
 						test_classname = 'pass'
 						action_links.append(task_link_template.format(**{'desc':'Check if %s is fixed - a test is passing, we should have a look' % bug_data['id'], 'bug':bug_data['id'], 'type':'check', 'link': bug_data['link'], 'difficulty':'easy', 'linktext':'re-test'}))
+						tasks['easy'].append({'desc':'Check if %s is fixed - a test is passing, we should have a look' % bug_data['id'], 'bug':bug_data['id'], 'type':'check', 'link': bug_data['link'], 'difficulty':'easy'})
 					elif this_test_data['test_state'] == 'false':
 						test_state = 'fail'
 						test_classname = 'fail'
@@ -273,35 +289,40 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 						test_state = this_test_data['test_state']
 						test_classname = 'fail'
 					test_age = 'Tested %s, ' % timesince(datetime.strptime(this_test_data['test_date'], '%Y-%m-%d %H:%M:%S'))
-				#else:
-					#tasks['hard'].append({'desc':'Write a new test for bug %s' % bug_data['id'], 'bug':bug_data['id'], 'type':'writetest', 'link':bug_data['link'], 'difficulty':'hard'})
 				if 'whiteboard' in bug_data:
 					if '[contactready]' in bug_data['whiteboard']:
 						contactready[str(bug)] = bug_data
+						bug_step = 'contactready'
 						action_links.insert(0, task_link_template.format(**{'desc':'Contact %s about bug %s' % (hostname, bug), 'bug':bug_data['id'], 'type':'contact', 'link':bug_data['link'], 'difficulty':'medium', 'linktext': 'contact'}))
-						bug_html.append(bug_template.format(**{"bug_id":bug, "state":"open", "step": "contactready", "bug_link":bug_data['link'], "bug_summary":cgi.escape(bug_data["summary"]), "test_state":test_state, "test_classname": test_classname, "test_age":test_age, "action_links":" | ".join(action_links)}))
+						tasks['medium'].append({'desc':'Contact %s about bug %s' % (hostname, bug), 'bug':bug_data['id'], 'type':'contact', 'link':bug_data['link'], 'difficulty':'medium'})
 					elif '[sitewait]' in bug_data['whiteboard']:
 						contacted[str(bug)] = bug_data
+						bug_step = 'sitewait'
 						# encourage visitors to re-contact bugs that have been in sitewait for a while
 						if age_since_change.days > 60:
 							action_links.insert(0, task_link_template.format(**{'desc': 'Try to contact %s once more about %s - it\'s been more than two months..' % (hostname, bug), 'bug':bug_data['id'], 'type':'recontact', 'link':bug_data['link'], 'difficulty':'medium', 'linktext': 'contact again!'}))
-						bug_html.append(bug_template.format(**{"bug_id":bug, "state":"open", "step": "sitewait", "bug_link":bug_data['link'], "bug_summary":cgi.escape(bug_data["summary"]), "test_state":test_state, "test_classname": test_classname, "test_age":test_age, "action_links":" | ".join(action_links)}))
+							tasks['medium'].append({'desc': 'Try to contact %s once more about %s - it\'s been more than two months..' % (hostname, bug), 'bug':bug_data['id'], 'type':'recontact', 'link':bug_data['link'], 'difficulty':'medium'})
 					elif bug_data['status'] != 'ASSIGNED': # not analysed yet?
 						open_bugs[str(bug)] = bug_data
+						bug_step = 'needsanalysis'
 						# If bug was last changed more than 60 days ago, or was a hit-n-run report, not changed since filed,
 						# let's ask for help simply checking if the problem is there
 						if age_since_change.days > 60 or diff_creation_change.seconds < 60*60:
 							action_links.insert(0, task_link_template.format(**{'desc':'Check if bug %s happens for you' % bug_data['id'], 'bug':bug_data['id'], 'type':'check', 'link':bug_data['link'], 'difficulty':'easy', 'linktext': 'look for problem'}))
 							tasks['easy'].append({'desc':'Check if bug %s happens for you' % bug_data['id'], 'bug':bug_data['id'], 'type':'check', 'link':bug_data['link'], 'difficulty':'easy'})
 
-						action_links.insert(0, task_link_template.format(**{'desc':'Analyze bug %s to figure out why it fails' % bug_data['id'], 'bug':bug_data['id'], 'type':'analyze', 'link':bug_data['link'], 'difficulty':'hard', 'linktext':'analyze'}))
+						action_links.append(task_link_template.format(**{'desc':'Analyze bug %s to figure out why it fails' % bug_data['id'], 'bug':bug_data['id'], 'type':'analyze', 'link':bug_data['link'], 'difficulty':'hard', 'linktext':'analyze'}))
 						tasks['hard'].append({'desc':'Analyze bug %s to figure out why it fails' % bug_data['id'], 'bug':bug_data['id'], 'type':'analyze', 'link':bug_data['link'], 'difficulty':'hard'})
+					else:
+						bug_step = 'needsanalysis'
 
-						bug_html.append(bug_template.format(**{"bug_id":bug, "state":"open", "step": "needsanalysis", "bug_link":bug_data['link'], "bug_summary":cgi.escape(bug_data["summary"]), "test_state":test_state, "test_classname": test_classname, "test_age":test_age, "action_links":" | ".join(action_links)}))
+				bug_html.append(bug_template.format(**{"bug_id":bug, "state":"open", "step": bug_step, "bug_link":bug_data['link'], "bug_summary":sanitize(bug_data["summary"]), "test_state":test_state, "test_classname": test_classname, "test_age":test_age, "action_links":prep_action_links(action_links)}))
 
-			if len(masterBugTable['hostIndex'][hostname]['open']):
+			if len(masterBugTable['hostIndex'][hostname]['open']) > 0:
 				rowspan = len(masterBugTable['hostIndex'][hostname]['open']) + 1
 				site_html.append(site_template.format(**{"hostname": str(hostname), "bugdata": "\n".join(bug_html), "rowspan":rowspan}))
+			elif len(masterBugTable['hostIndex'][hostname]['resolved']) > 0:
+				all_green.append(hostname)
 			resolved.extend(masterBugTable['hostIndex'][hostname]['resolved'])
 			# We also go through the resolved ones to see if any of them has a failing test
 			for bug in masterBugTable['hostIndex'][hostname]['resolved']:
@@ -311,13 +332,14 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 					if this_test_data['test_state'] != 'true' and bug_data['resolution'] in ['FIXED', 'WORKSFORME', 'CLOSED']:
 						tasks['easy'].append({'desc':'Check if bug %s regressed. It\'s supposedly fixed, but the test fails.' % bug_data['id'], 'bug':bug_data['id'], 'type':'regcheck', 'link':bug_data['link'], 'difficulty':'easy'})
 
-		#
+		# the long tail? Sites we don't know much about..
+		else:
+			long_tail.append(hostname)
 		bug_html = []
 	perc_resolved = int((len(resolved) * 100) / (masterBugTable['lists'][listname]['metrics']['numOpenBugs'] + masterBugTable['lists'][listname]['metrics']['numClosedBugs']))
-	perc_contacted = int((len(contacted) * 100) / (masterBugTable['lists'][listname]['metrics']['numOpenBugs'] + masterBugTable['lists'][listname]['metrics']['numClosedBugs']))
-	perc_contactready = int((len(contactready) * 100) / (masterBugTable['lists'][listname]['metrics']['numOpenBugs'] + masterBugTable['lists'][listname]['metrics']['numClosedBugs']))
-	perc_open_bugs = int((len(open_bugs) * 100) / (masterBugTable['lists'][listname]['metrics']['numOpenBugs'] + masterBugTable['lists'][listname]['metrics']['numClosedBugs']))
-
+	perc_contacted = int((len(contacted) * 100) / (masterBugTable['lists'][listname]['metrics']['numOpenBugs'] ))
+	perc_contactready = int((len(contactready) * 100) / (masterBugTable['lists'][listname]['metrics']['numOpenBugs'] ))
+	perc_open_bugs = int((len(open_bugs) * 100) / (masterBugTable['lists'][listname]['metrics']['numOpenBugs'] ))
 	numOpenBugs = len(open_bugs) + len(contacted) + len(contactready)
 	perc_hosts_w_open_bugs = round(float(masterBugTable['lists'][listname]['metrics']['numHostsWithOpenBugs']*100) / len(masterBugTable['lists'][listname]['data']),2)
 	metrics = """<div id="metrics">%d sites, %.1f%% have open bugs. <br>The %d open bugs affect %d unique hostnames.</div>""" % (len(masterBugTable['lists'][listname]['data']), perc_hosts_w_open_bugs, numOpenBugs, masterBugTable['lists'][listname]['metrics']['numHostsWithOpenBugs'])
@@ -326,11 +348,11 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 		<tr><td colspan="5"><div class="list-status-graph">
 			<!-- TODO: how to link to both webcompat.com and bugzilla bugs here??? -->
 			<!--span class="resolved" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d resolved</span-->
-			<span class="contacted" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d contacted</span>
-			<span class="contactready" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d contactready</span>
 			<span class="open" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d open</span>
+			<span class="contactready" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d contactready</span>
+			<span class="contacted" href="https://bugzilla.mozilla.org/buglist.cgi?bug_id=%s" style="width:%d%%">%d contacted</span>
 		</div></td></tr>
-	""" % (','.join(map(str,resolved)), perc_resolved, len(resolved), ','.join(contacted.keys()), perc_contacted, len(contacted), ','.join(contactready.keys()), perc_contactready, len(contactready), ','.join(open_bugs.keys()), perc_open_bugs, len(open_bugs))
+	""" % (','.join(map(str,resolved)), perc_resolved, len(resolved),','.join(open_bugs.keys()), perc_open_bugs, len(open_bugs), ','.join(contactready.keys()), perc_contactready, len(contactready), ','.join(contacted.keys()), perc_contacted, len(contacted) )
 	for task in tasks['easy']:
 		task_html.append(task_template.format(**task))
 	for task in tasks['medium']:
@@ -346,7 +368,7 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 	f.write('\n')
 	f.write('\n'.join(site_html).encode('utf_8'))
 	f.write('</table>')
-	f.write('\n<h2>Tasks</h2>\n<p>Please note: data from Bugzilla is updated once an hour. If you complete one of these tasks it will not disappear from the list immediately, but should within one hour during the next data update. :) <br>TODO: make this true also for tasks like "write a test" (only disappears after next test run) and "check if bug x happens" (only disappears when bug moves to contactready or sitewait)..</p>')
+	f.write('\n<h2>Tasks</h2>\n<p>Below are all the tasks from the above table ordered by difficulty.</p>\n<p>Please note: data from Bugzilla is updated once an hour. If you complete one of these tasks it will not disappear from the list immediately, but should within one hour during the next data update. :) <br>TODO: make this true also for tasks like "write a test" (only disappears after next test run)..</p>')
 	if len(task_html) == 0:
 		f.write('\n<p><b>Congratulations!</b> Nothing to do here at the moment - check back later or help out in some other region :)</p>')
 	else:
