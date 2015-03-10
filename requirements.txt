@@ -1,0 +1,3 @@
+requests==2.5.3
+slimit==0.8.1
+tldextract==1.5.1
