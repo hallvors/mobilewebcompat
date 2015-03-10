@@ -11,9 +11,6 @@
 
 #TODO Static pages :
 
-# Integrate tasks into the table of bugs
-# Linkify bug numbers
-
 # show misc test data?
 # "maybe" issues? "site x had different redirects for different UAs, no bug is reported (yet)"
 # hook screenshot review into /sites/example.com pages?
@@ -65,6 +62,13 @@ def sanitize(dirty_html):
 	dirty_html = dirty_html.replace('>', '&gt;')
 	dirty_html = dirty_html.replace('"', '&quot;')
 	return dirty_html
+
+def link_bug(text, link):
+	match = re.search('\d+$', link)
+	if match:
+		bugnr = match.group(0)
+		text = text.replace(bugnr, '<a href="%s">%s</a>' % (link, bugnr))
+	return text
 
 def main():
 	if conf['load_remote_bz_data']:
@@ -246,7 +250,7 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 		{hostname}</td><td></tr>
 		{bugdata}
 	""".decode('utf_8')
-	task_template = """<li>[{difficulty}] {desc} - <a href="/taskdetails/?bug={bug}&type={type}&link={link}&desc={desc}">Accept task!</a></li>""".decode('utf_8')
+	task_template = """<li>[{difficulty}] {desc_html} - <a href="/taskdetails/?bug={bug}&type={type}&link={link}&desc={desc}">Accept task!</a></li>""".decode('utf_8')
 	task_link_template = """<a href="/taskdetails/?bug={bug}&type={type}&link={link}&desc={desc}">{linktext}</a>""".decode('utf_8')
 	tasks = {"easy":[],"medium":[],"hard":[]}
 	site_html = []
@@ -294,14 +298,14 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 						contactready[str(bug)] = bug_data
 						bug_step = 'contactready'
 						action_links.insert(0, task_link_template.format(**{'desc':'Contact %s about bug %s' % (hostname, bug), 'bug':bug_data['id'], 'type':'contact', 'link':bug_data['link'], 'difficulty':'medium', 'linktext': 'contact'}))
-						tasks['medium'].append({'desc':'Contact %s about bug %s' % (hostname, bug), 'bug':bug_data['id'], 'type':'contact', 'link':bug_data['link'], 'difficulty':'medium'})
+						tasks['medium'].append({'desc':'Contact %s about bug %s' % (hostname, bug_data['id']), 'bug':bug_data['id'], 'type':'contact', 'link':bug_data['link'], 'difficulty':'medium'})
 					elif '[sitewait]' in bug_data['whiteboard']:
 						contacted[str(bug)] = bug_data
 						bug_step = 'sitewait'
 						# encourage visitors to re-contact bugs that have been in sitewait for a while
 						if age_since_change.days > 60:
-							action_links.insert(0, task_link_template.format(**{'desc': 'Try to contact %s once more about %s - it\'s been more than two months..' % (hostname, bug), 'bug':bug_data['id'], 'type':'recontact', 'link':bug_data['link'], 'difficulty':'medium', 'linktext': 'contact again!'}))
-							tasks['medium'].append({'desc': 'Try to contact %s once more about %s - it\'s been more than two months..' % (hostname, bug), 'bug':bug_data['id'], 'type':'recontact', 'link':bug_data['link'], 'difficulty':'medium'})
+							action_links.insert(0, task_link_template.format(**{'desc': 'Try to contact %s once more about %s - it\'s been more than two months..' % (hostname, bug_data['id']), 'bug':bug_data['id'], 'type':'recontact', 'link':bug_data['link'], 'difficulty':'medium', 'linktext': 'contact again!'}))
+							tasks['medium'].append({'desc': 'Try to contact %s once more about %s - it\'s been more than two months..' % (hostname, bug_data['id']), 'bug':bug_data['id'], 'type':'recontact', 'link':bug_data['link'], 'difficulty':'medium'})
 					elif bug_data['status'] != 'ASSIGNED': # not analysed yet?
 						open_bugs[str(bug)] = bug_data
 						bug_step = 'needsanalysis'
@@ -354,11 +358,36 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 		</div></td></tr>
 	""" % (','.join(map(str,resolved)), perc_resolved, len(resolved),','.join(open_bugs.keys()), perc_open_bugs, len(open_bugs), ','.join(contactready.keys()), perc_contactready, len(contactready), ','.join(contacted.keys()), perc_contacted, len(contacted) )
 	for task in tasks['easy']:
+		task['desc_html'] = link_bug(task['desc'], task['link'])
 		task_html.append(task_template.format(**task))
 	for task in tasks['medium']:
+		task['desc_html'] = link_bug(task['desc'], task['link'])
 		task_html.append(task_template.format(**task))
 	for task in tasks['hard']:
+		task['desc_html'] = link_bug(task['desc'], task['link'])
 		task_html.append(task_template.format(**task))
+	if False:
+		# Sites with only resolved bugs
+		site_html.append('<tr><th colspan="5">Sites with only closed bugs</th></tr>')
+		for hostname in all_green:
+			site_html.append('<tr><td rowspan="%d">%s</td><td colspan="4"></td></tr>'%(len(masterBugTable['hostIndex'][hostname]['resolved'])+1, hostname ))
+			if hostname in masterBugTable['hostIndex']:
+				# We might as well list those closed bugs..
+				for bug in masterBugTable['hostIndex'][hostname]['resolved']:
+					bug_data = masterBugTable['bugs'][bug]
+					test_state = ''
+					test_classname = ''
+					if str(bug_data['test_id']) in test_data:
+						this_test_data = test_data[str(bug_data['test_id'])]
+						test_state = this_test_data['test_state']
+						if this_test_data['test_state'] != 'true' and bug_data['resolution'] in ['FIXED', 'WORKSFORME', 'CLOSED']:
+							tasks['easy'].append({'desc':'Check if bug %s regressed. It\'s supposedly fixed, but the test fails.' % bug_data['id'], 'bug':bug_data['id'], 'type':'regcheck', 'link':bug_data['link'], 'difficulty':'easy'})
+
+					site_html.append(bug_template.format(**{"bug_id":bug, "state":bug_data['status'], "step": "", "bug_link":bug_data['link'], "bug_summary":sanitize(bug_data["summary"]), "test_state":test_state, "test_classname": test_classname, "test_age":test_age, "action_links":""}))
+		# Sites with no known bugs at all..
+		site_html.append('<tr><th colspan="5">Sites with no known bugs</th></tr>')
+		for hostname in long_tail:
+			site_html.append('<tr><td>%s</td><td colspan="4">..no issues reported about %s ever..</td></tr>'%(hostname,hostname))
 	f = open('../lists/%s.html' % listname, 'w')
 	f.write(html.encode('utf_8'))
 	f.write('\n')
