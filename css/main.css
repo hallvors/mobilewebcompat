@@ -137,7 +137,9 @@ td a {
 }
 /* How you can help */
 
-dl {margin-bottom: 1rem;}
+dl {margin: 0 -0.5rem 1rem -0.5rem;
+	border-top: 1px solid rgb(200,200,200);
+	width:calc(100% + 1rem);}
 dt {
 	font-weight: bold;
 	display: block;
@@ -163,6 +165,19 @@ dd a {
 	padding: 0.5rem;
 	width: 100%;
 }
+
+.testres strong {
+	padding:0.3rem;
+	border-radius: 5px;
+	text-transform: uppercase;
+	}
+.fail strong {
+	color:#CC6666;
+	}
+
+.pass strong {
+	color:#99CC99;
+	}
 
 /*original style*/
 /*.dependbugs div{
