@@ -102,6 +102,7 @@ tr.website  {
 tr.sitewait td:nth-child(1) {border-left: 8px solid #083;}
 tr.contactready td:nth-child(1) {border-left: 8px solid #fc0;}
 tr.needsanalysis td:nth-child(1) {border-left: 8px solid #803;}
+tr td:nth-child(2) {border-left: 1px solid rgb(200,200,200);}
 
 th {
 	font-size: 1rem;
@@ -134,7 +135,34 @@ td a {
 	float:right;
 	visibility:hidden;
 }
+/* How you can help */
 
+dl {margin-bottom: 1rem;}
+dt {
+	font-weight: bold;
+	display: block;
+	padding: .5rem;	}
+dd {
+	background-color: #FFCC66;
+	border-radius: 5px;
+	display: inline-block;
+	margin: 0.2rem 1rem;
+	padding: .4rem;
+	}
+
+dd a {
+	padding: .5rem;
+	}
+
+/* test results */
+.testres {
+	background-color: #fff;
+	display: inline-block;
+	margin-left: -.5rem;
+	margin-bottom: -.5rem;
+	padding: 0.5rem;
+	width: 100%;
+}
 
 /*original style*/
 /*.dependbugs div{
