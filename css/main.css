@@ -68,7 +68,8 @@ h1, h2 {
 	}
 h1 {font-size: 2rem;
 	margin: 3.5rem 0 1rem 0;}
-h2 {background-color: pink;
+
+h2 {
 	display: inline-block;
 	font-size: 1.5rem;
 	margin: 2rem 0 1rem 0;
@@ -198,3 +199,29 @@ dd a {
 	color:#99CC99;
 	}
 
+/* Tasks */
+
+.intro {
+	background-color: #fff;
+	padding: 1rem;}
+
+/* project maintenance */
+
+.todo {
+	font-family: 'Courier New', Courier, fixed;
+	margin: .5rem 0;
+	display: block;
+}
+.todo strong {
+	color:#CC66CC ;
+	padding: .3rem;
+}
+
+.tasks ul {margin: 2rem 0;}
+.tasks li {margin: 1rem 0;}
+.tasks .easy::before {content:"\1f331"; padding-right: 0.5rem;}
+.tasks .medium::before {content:"\1f33f"; padding-right: 0.5rem;}
+.tasks .hard::before {content:"\1f333"; padding-right: 0.5rem;}
+/*SEEDLING
+Unicode: U+1F331 (U+D83C U+DF31), UTF-8: F0 9F 8C B1
+*/
