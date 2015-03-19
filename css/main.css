@@ -100,7 +100,7 @@ p {margin: 1rem 0;}
 .stats svg text {
   fill: #fff;
   text-transform: uppercase;
-  font-size: 1vh;
+  font-size: 0.2rem;
   font-family:'Helvetica', sans-serif;
 }
 /* Table */
