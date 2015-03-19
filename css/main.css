@@ -93,17 +93,16 @@ p {margin: 1rem 0;}
 }
 .stats svg {
   margin:0;
-  height:3rem;
+  height:80px;
   width:100%;
 }
 
 .stats svg text {
   fill: #fff;
   text-transform: uppercase;
-  font-size: 0.04rem;
+  font-size: 1vh;
   font-family:'Helvetica', sans-serif;
 }
-
 /* Table */
 table {
 	background-color: #fff;
