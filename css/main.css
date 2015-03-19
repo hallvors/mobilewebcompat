@@ -87,6 +87,23 @@ p {margin: 1rem 0;}
 	padding: 1rem;
 	}
 
+.stats {
+  padding:0;
+  width:100%;
+}
+.stats svg {
+  margin:0;
+  height:3rem;
+  width:100%;
+}
+
+.stats svg text {
+  fill: #fff;
+  text-transform: uppercase;
+  font-size: 0.04rem;
+  font-family:'Helvetica', sans-serif;
+}
+
 /* Table */
 table {
 	background-color: #fff;
