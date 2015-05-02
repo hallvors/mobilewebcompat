@@ -112,11 +112,11 @@ def arewecompatibleyet(environ, start_response):
   status = '200 OK' # HTTP Status
   headers = [('Content-type', 'text/html;charset=utf-8')] # HTTP Headers
   start_response(status, headers)
+  f = open('data/masterbugtable.js', 'r')
+  f.seek(89)
+  data = json.loads(f.read())
+  f.close()
   if environ['PATH_INFO'] == '/newsite':
-    f = open('data/masterbugtable.js', 'r')
-    f.seek(89)
-    data = json.loads(f.read())
-    f.close()
     f = open('data/toplists.js', 'r')
     f.seek(61)
     #return f.read()
@@ -131,11 +131,11 @@ def arewecompatibleyet(environ, start_response):
     output.append('</ul>')
   elif '/taskdetails/' in environ['PATH_INFO']:
     # task types: check, writetest, contact, recontact, analyze, regcheck
-    the_type = parameters['type'][0]
-    the_bug = parameters['bug'][0]
-    the_link = parameters['link'][0]
-    the_desc = parameters['desc'][0]
-    the_host = parameters['host'][0]
+    the_type = sanitize(parameters['type'][0])
+    the_bug = sanitize(parameters['bug'][0])
+    the_link = sanitize(parameters['link'][0])
+    the_desc = sanitize(parameters['desc'][0])
+    the_host = sanitize(parameters['host'][0])
     output.append(head_html(the_desc))
     output.append('<p>Thank you and welcome! We need your help. This is a small guide to how to complete your task - if you already know what to do, simply <a href="%s">jump right in</a>!</p>' % the_link)
     #output.append('<h2>%s</h2>' % the_desc)
@@ -155,7 +155,7 @@ def arewecompatibleyet(environ, start_response):
       output.append('<p><a href="%s">The bug report</a> should explain what the site needs to know. Your task is to reach out and try to find a contact that can help us fix the website.</p>' % the_link)
       output.append('<ol>')
       if the_host in data['hostIndex']:
-        for bugnr in data['hostIndex']['resolved']:
+        for bugnr in data['hostIndex'][the_host]['resolved']:
             output.append('<li><b>Pro tip</b>: we may already have contacted this site about <a href="%s">bug %s</a>. Check if that bug has contact details!' % (bugnr, data['bugs'][str(bugnr)]['link']))
       output.append('<li>You can look for "Contact us" forms or E-mail addresses on the site..')
       output.append('<li>..you can try to find developers for the site on GitHub or LinkedIn..')
@@ -229,6 +229,13 @@ def arewecompatibleyet(environ, start_response):
     return check_url(url)
 
   return output
+
+def sanitize(dirty_html):
+  dirty_html = dirty_html.replace('&', '&amp;')
+  dirty_html = dirty_html.replace('<', '&lt;')
+  dirty_html = dirty_html.replace('>', '&gt;')
+  dirty_html = dirty_html.replace('"', '&quot;')
+  return dirty_html
 
 
 application = arewecompatibleyet
