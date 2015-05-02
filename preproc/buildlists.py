@@ -35,7 +35,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__))) # For CRON usage..
 # conf['weWantSubdomainsFor'] is a list of hostnames that should not be reduced to domain names. For these, we'll strip any *www.* prefix, but
 # no other subdomains. (Another option is to only strip www - might work too)
 conf = { 'weWantSubdomainsFor': r'(\.google\.com|\.live\.com|\.yahoo\.com|go\.com|\.js$)',  # the latter is not, strictly speaking, a subdomain..
-'load_remote_bz_data': False, 'load_webcompat_bugs': False }
+'load_remote_bz_data': False, 'load_webcompat_bugs': True }
 
 
 # http://stackoverflow.com/questions/8230315/python-sets-are-not-json-serializable :-(
@@ -90,6 +90,8 @@ def main():
 	for bug in bzdataobj['bugs']:
 		bug['link'] = 'https://bugzilla.mozilla.org/show_bug.cgi?id=%s' % bug['id']
 		bug['test_id'] = '%s' % bug['id'] # Bugzilla issues are referenced by bug number in sitedata.js
+		if '[sitewait]' in bug['whiteboard']:
+			bug['last_contacted'] = find_last_contacted_date(bug['id'])
 	if conf['load_webcompat_bugs']:
 		# merge in webcompat.com data
 		webcompat_data = get_webcompat_data()[1]
@@ -259,6 +261,7 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 	resolved = []
 	contacted = {}
 	contactready = {}
+	needscontact = {}
 	open_bugs = {}
 	all_green = []
 	long_tail = []
@@ -299,6 +302,11 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 						bug_step = 'contactready'
 						action_links.insert(0, task_link_template.format(**{'desc':'Contact %s about bug %s' % (hostname, bug), 'bug':bug_data['id'], 'type':'contact', 'link':bug_data['link'], 'difficulty':'medium', 'linktext': 'contact'}))
 						tasks['medium'].append({'desc':'Contact %s about bug %s' % (hostname, bug_data['id']), 'bug':bug_data['id'], 'type':'contact', 'link':bug_data['link'], 'difficulty':'medium'})
+					if '[needscontact]' in bug_data['whiteboard']:
+						needscontact[str(bug)] = bug_data
+						bug_step = 'needscontact'
+						action_links.insert(0, task_link_template.format(**{'desc':'Find contact person for %s about bug %s' % (hostname, bug), 'bug':bug_data['id'], 'type':'contact', 'link':bug_data['link'], 'difficulty':'medium', 'linktext': 'contact'}))
+						tasks['medium'].append({'desc':'Find contact person for %s about bug %s' % (hostname, bug_data['id']), 'bug':bug_data['id'], 'type':'contact', 'link':bug_data['link'], 'difficulty':'medium'})
 					elif '[sitewait]' in bug_data['whiteboard']:
 						contacted[str(bug)] = bug_data
 						bug_step = 'sitewait'
@@ -526,6 +534,30 @@ def timesince(dt, default="just now"):
 #				masterBugTable['hostIndex'][host] = {"open":[], "resolved":[]}
 #			masterBugTable['hostIndex'][host]["open"].append(bug_id)
 #			i+=1
+
+def find_last_contacted_date(bug):
+	# https://bugzilla.mozilla.org/rest/bug/679025/comment
+	contacted_date = None
+	comment_str = get_remote_file('https://bugzilla.mozilla.org/rest/bug/%s/comment' % bug, True)
+	comments = json.loads(comment_str)
+	for i in range(len(comments['bugs'][str(bug)]['comments'])-1,0,-1):
+		comment = comments['bugs'][str(bug)]['comments'][i]
+		if 'contact' in comment['tags']:
+			contacted_date = comment['time']
+			break
+	# https://bugzilla.mozilla.org/rest/bug/679025/history
+	if not contacted_date:
+		history_str = get_remote_file('https://bugzilla.mozilla.org/rest/bug/%s/history' % bug, True)
+		history = json.loads(history_str)['bugs'][0]['history']
+		for i in range(len(history)-1,0,-1):
+			for change in history[i]['changes']:
+				if change['field_name'] != 'whiteboard':
+					continue
+				if '[sitewait]' in change['added'] and '[sitewait]' not in change['removed']:
+					contacted_date = history[i]['when']
+					break
+
+	return contacted_date
 
 if __name__ == "__main__":
     main()
