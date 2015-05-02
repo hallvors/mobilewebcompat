@@ -35,7 +35,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__))) # For CRON usage..
 # conf['weWantSubdomainsFor'] is a list of hostnames that should not be reduced to domain names. For these, we'll strip any *www.* prefix, but
 # no other subdomains. (Another option is to only strip www - might work too)
 conf = { 'weWantSubdomainsFor': r'(\.google\.com|\.live\.com|\.yahoo\.com|go\.com|\.js$)',  # the latter is not, strictly speaking, a subdomain..
-'load_remote_bz_data': False, 'load_webcompat_bugs': True }
+'load_remote_bz_data': True, 'load_webcompat_bugs': True }
 
 
 # http://stackoverflow.com/questions/8230315/python-sets-are-not-json-serializable :-(
@@ -305,8 +305,8 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
 					if '[needscontact]' in bug_data['whiteboard']:
 						needscontact[str(bug)] = bug_data
 						bug_step = 'needscontact'
-						action_links.insert(0, task_link_template.format(**{'desc':'Find contact person for %s about bug %s' % (hostname, bug), 'bug':bug_data['id'], 'type':'contact', 'link':bug_data['link'], 'difficulty':'medium', 'linktext': 'contact'}))
-						tasks['medium'].append({'desc':'Find contact person for %s about bug %s' % (hostname, bug_data['id']), 'bug':bug_data['id'], 'type':'contact', 'link':bug_data['link'], 'difficulty':'medium'})
+						action_links.insert(0, task_link_template.format(**{'desc':'Find contact person for %s about bug %s' % (hostname, bug), 'bug':bug_data['id'], 'type':'findcontact', 'link':bug_data['link'], 'difficulty':'medium', 'linktext': 'contact'}))
+						tasks['medium'].append({'desc':'Find contact person for %s about bug %s' % (hostname, bug_data['id']), 'bug':bug_data['id'], 'type':'findcontact', 'link':bug_data['link'], 'difficulty':'medium'})
 					elif '[sitewait]' in bug_data['whiteboard']:
 						contacted[str(bug)] = bug_data
 						bug_step = 'sitewait'

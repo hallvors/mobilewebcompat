@@ -1,3 +1,7 @@
+# TODO: linkify bug numbers in task descriptions
+# TODO: sanitize user input :)
+
+
 import os, json, re, glob
 import sys
 from wsgiref.simple_server import make_server
@@ -134,7 +138,7 @@ def arewecompatibleyet(environ, start_response):
 		output.append(head_html(the_desc))
 		output.append('<p>Thank you and welcome! We need your help. This is a small guide to how to complete your task - if you already know what to do, simply <a href="%s">jump right in</a>!</p>' % the_link)
 		#output.append('<h2>%s</h2>' % the_desc)
-		if 'webcompat.com' in the_link or 'github.com' in the_link:
+		if 'webcompat.com' in the_link or 'github.com' in the_link or the_type == 'writetest':
 			output.append('<p><b>Before you start</b>: for this task you need a <a href="https://github.com">GitHub</a> account. If you don\'t have one, please register before you continue.</p>')
 		elif 'bugzilla.mozilla.org' in the_link:
 			output.append('<p><b>Before you start</b>: for this task you need a <a href="https://bugzilla.mozilla.org">Bugzilla</a> account. If you don\'t have one, please register before you continue.</p>')
@@ -145,17 +149,27 @@ def arewecompatibleyet(environ, start_response):
 				output.append('<li>The bug report is likely closed. If you find the problem, re-open it.\n<li>If you don\'t see a way to reopen the bug, make sure to say so in the comment and somebody will help you.')
 				output.append('<li>If you <b>don\'t</b> see any problem, we need to fix the test. Comment in the bug that the test needs fixing.')
 			output.append('</ol>')
-		elif the_type == 'contact' or the_type == 'recontact':
+		elif the_type == 'findcontact':
 			output.append('<h3>Howto</h3>')
 			output.append('<p><a href="%s">The bug report</a> should explain what the site needs to know. Your task is to reach out and try to find a contact that can help us fix the website.</p>' % the_link)
 			output.append('<ol><li>Try to find a contact person, or a way to contact the site.')
-			if the_type == 'recontact':
-				output.append('<li>(We already tried to contact the site, but the problem seems to still be there.. Maybe find another contact?)')
-				output.append('<li>(It\'s probably a good idea to first check if they fixed the problem already without telling us. It happens..)')
 			output.append('<li>You can look for "Contact us" forms or E-mail addresses on the site..')
 			output.append('<li>..you can try to find developers for the site on GitHub or LinkedIn..')
-			output.append('<li>..you can look for the site\'s accounts on Twitter or Facebook..</ol>')
-			output.append('<p>Once you\'ve found a promising way to contact someone, try to write a polite letter.</p>')
+			output.append('<li>..you can look for the site\'s accounts on Twitter or Facebook..')
+			output.append('<li>Once you\'ve found a promising way to contact the site, add a comment to the bug with this information.')
+			if 'webcompat.com' in the_link or 'github.com' in the_link:
+				output.append('<li>Please also remove the <b>needscontact</b> label and add a <b>contactready</b> label')
+			elif 'bugzilla.mozilla.org' in the_link:
+				output.append('<li>Please also remove [needscontact] and add [contactready] to the Whiteboard field if Bugzilla lets you do so. (If not just comment and someone will help)')
+			output.append('</ol>')
+		elif the_type == 'contact' or the_type == 'recontact':
+			output.append('<h3>Howto</h3>')
+			output.append('<p><a href="%s">The bug report</a> should explain what the site needs to know. Your task is to reach out and try to find a contact that can help us fix the website.</p>' % the_link)
+			output.append('<ol>')
+			if the_type == 'recontact':
+				output.append('<li>(We already tried to contact the site, but the problem seems to still be there.. Maybe find another contact?)')
+				output.append('<li>(It\'s probably a good idea to first check if they fixed the problem already without telling us. It happens..)</li>')
+			output.append('<p>The bug should already have some information about how to contact the site. Now try to write a polite letter..</p>')
 			output.append('<ol><li>You may find <a href="https://wiki.mozilla.org/Compatibility/StdLetters">our letter templates</a> useful')
 			output.append('<li>Say who you are, that you volunteer for Firefox, and that you\'re trying to reach a web developer')
 			if 'webcompat.com' in the_link or 'github.com' in the_link:
@@ -164,6 +178,7 @@ def arewecompatibleyet(environ, start_response):
 			elif 'bugzilla.mozilla.org' in the_link:
 				output.append('<li>Please include this link: <b>https://webcompat.com/simplebug/index.html#mozilla/%s</b>' % the_bug)
 				output.append('<li>Having sent a request to the site, please comment on the bug and add [sitewait] to the Whiteboard field if Bugzilla lets you do so. (If not just comment and someone will help)')
+			output.append('</ol>')
 		elif the_type == 'writetest':
 			output.append('<p>Hey, cool! You want to write a test? A test is a small JavaScript that will return false if the problem exists, true if it is fixed.</p>')
 			output.append('<ol><li>Have a look at <a href="https://github.com/hallvors/sitecomptester-extension/blob/master/README.md#writing-tests">the documentation</a>')
