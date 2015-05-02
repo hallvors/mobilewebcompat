@@ -11,6 +11,26 @@ var hosts = {};
 
 */
 var bugdata = {
+    '1122445' : {
+        url:'https://www.sparebank1.no/hedmark/',
+        ua:'FirefoxDesktop',
+        steps:[
+            function(){
+                document.getElementsByClassName('loginInput')[0].value = '00000000000';
+                document.getElementsByClassName('loginInput')[0].form.submit();
+            },
+            function(){ /* We need an IFRAME */
+                if(window.length === 0) return 'delay-and-retry';
+                document.getElementsByTagName('iframe')[0].setAttribute('name', 'bankid_iframe_I_presume')
+            },
+            function(){
+                if(document.querySelector('div.loader_wrapper')) return 'delay-and-retry';
+                return document.getElementsByTagName('form').length > 0;
+            }
+        ],
+        stepInFrame:{2:'bankid_iframe_I_presume'},
+        title:"CSP change in behavior regards case sensitivity loading resources - breaks Norwegian BankID authentication"
+    },
     '1116139' : {
         url:'http://www.atrapalo.com/',
         ua:'FirefoxOS',
@@ -952,8 +972,9 @@ var bugdata = {
     "1019648": {
         "url": "http://cinepolis.com.mx",
         "steps": [
-            function(){return hasVideoTags() && location.hostname === "www.cinepolis.com.mx";}
+            function(){return pageWidthFitsScreen();}
         ],
+        "mobNavElm": "div#btnMenu",
         "ua": "FirefoxOS",
         "title": "cinepolis.com.mx sends desktop site to Firefox OS"
     },
@@ -992,7 +1013,7 @@ var bugdata = {
     "765214": {
         "url": "https://onedrive.live.com/redir?resid=FB24CDE01BC02250!564&authkey=!ADhOW6fMV_dF0cw&ithint=file%2cpdf",
         "steps": [
-            function(){return location.href.indexOf('WordPdf')>-1;}
+            function(){if(location.href.indexOf('view.aspx')<0) return 'delay-and-retry'; return location.href.indexOf('WordPdf')>-1;}
         ],
         "ua": "FirefoxDesktop",
         "title": "Microsoft SkyDrive complains about the lack of Adobe Reader when trying to open the PDF and PDF.js is installed and enabled"
@@ -1205,7 +1226,7 @@ var bugdata = {
     "1014905": {
         "url": "http://www.t-online.de/eltern/baby/id_69512620/vornamen-kind-darf-schaklin-heissen.html",
         "steps": [
-            function(){return hasViewportMeta() && location.hostname === "m.t-online.de" && mobileLinkOrScriptUrl();}
+            function(){return hasViewportMeta() && mobileLinkOrScriptUrl();}
         ],
         "ua": "FirefoxOS",
         "title": "Endless redirects on t-online.de"
@@ -1266,14 +1287,6 @@ var bugdata = {
         "ua": "FirefoxOS",
         "title": "sina.cn sends Firefox OS to the simplified mobile site"
     },
-    "1019644": {
-        "url": "http://voegol.com.br",
-        "steps": [
-            function(){return hasViewportMeta() && location.hostname === "m.voegol.com.br" && mobileLinkOrScriptUrl();}
-        ],
-        "ua": "FirefoxOS",
-        "title": "voegol.com.br sends desktop site to Firefox OS"
-    },
     "1019645": {
         "url": "http://zap.com.br",
         "steps": [
@@ -1285,7 +1298,7 @@ var bugdata = {
     "1019189": {
         "url": "http://expedia.com",
         "steps": [
-            function(){return hasViewportMeta() && hasMobileOptimizedMeta() && mobileLinkOrScriptUrl() && hasHandheldFriendlyMeta();}
+            function(){return hasViewportMeta() && hasMobileOptimizedMeta() && pageWidthFitsScreen();}
         ],
         "ua": "FirefoxOS",
         "title": "expedia.com sends desktop site to Firefox OS"
@@ -1342,8 +1355,9 @@ var bugdata = {
     "1015673": {
         "url": "http://www.discovery.com",
         "steps": [
-            function(){return location.hostname === "m.discovery.com";}
+            function(){return pageWidthFitsScreen();}
         ],
+        "mobNavElm": "button.navbar-toggle",
         "ua": "FirefoxOS",
         "title": "discovery.com sends desktop site to Firefox OS, vides do not play"
     },
@@ -1392,8 +1406,9 @@ var bugdata = {
         "url": "http://www.hotels.com/",
         "ua": "FirefoxOS",
         "steps": [
-            function(){return location.pathname.indexOf('/mobile') === 0}
+            function(){return pageWidthFitsScreen()}
         ],
+        "mobNavElm": "button.menu-action.burger",
         "title": "hotels.com sends Desktop Content to Firefox OS and Firefox Android"
     },
     "1025589": {
@@ -1416,7 +1431,7 @@ var bugdata = {
     "1019644": {
         "url": "http://voegol.com.br",
         "steps": [
-            function(){return hasViewportMeta() && location.hostname === "m.voegol.com.br";}
+            function(){if(!document.querySelector('img#imgLogo'))return 'delay-and-retry'; return hasViewportMeta() && location.hostname === "m.voegol.com.br";}
         ],
         "ua": "FirefoxOS",
         "title": "voegol.com.br sends desktop site to Firefox OS"
@@ -1835,8 +1850,9 @@ var bugdata = {
     "1008873": {
         "url": "http://depor.pe",
         "steps": [
-            function(){return location.hostname === "m.depor.pe";}
+            function(){return pageWidthFitsScreen();}
         ],
+        "mobNavElm": "span.btn-navbar",
         "ua": "FirefoxOS",
         "title": "depor.pe sends desktop site to Firefox OS, can't play video"
     },
@@ -1870,6 +1886,7 @@ var bugdata = {
             function(){},
             function(){return hasViewportMeta() && location.hostname === "m.state.gov";}
         ],
+        "mobNavElm": "a#menu-link1",
         "ua": "FirefoxOS",
         "title": "state.gov sends desktop site to Firefox OS and Firefox on Android"
     },
@@ -2056,7 +2073,7 @@ var bugdata = {
     "993870": {
         "url": "http://bankbazaar.com",
         "steps": [
-            function(){return hasViewportMeta() && mobileLinkOrScriptUrl();}
+            function(){return hasViewportMeta() && pageWidthFitsScreen();}
         ],
         "ua": "FirefoxOS",
         "title": "bankbazaar.com sends desktop site to Firefox OS"
@@ -3018,9 +3035,14 @@ var bugdata = {
             function(){ // sometimes we get a splash screen..
                 if(document.links.length === 1)document.links[0].click();
             },
+            function(){ // sometimes we get another splash screen..
+                if(document.readyState != 'complete' || document.links.length === 0) return 'delay-and-retry';
+                if(document.links.length === 1)document.links[0].click();
+            },
             function(){
                 if(document.readyState != 'complete') return 'delay-and-retry';
-                return document.getElementsByClassName('suggest').length>0;
+                return document.getElementsByTagName('nav').length>0;
+                //return document.getElementsByClassName('suggest').length>0;
             }
         ],
         "ua": "FirefoxAndroid",
@@ -3434,7 +3456,10 @@ var bugdata = {
     "935472" : {
 		url: 'http://blip.tv/commercialbreak/selling-out-colleen-ryan-6687803',
 		 ua: "FirefoxOS",
-		steps:[function(){return hasViewportMeta() /*(regression test, expected to pass)*/ && document.getElementById('PlayeriFrame')!==null}]
+         // unfortunately this test can't detect the lack of a playButton *inside* the IFRAME
+         // due to some (odd) cross-domain limitations
+		steps:[function(){return hasViewportMeta() /*(regression test, expected to pass)*/ &&
+            document.getElementById('PlayeriFrame')!==null}]
 	},
     /*'924386' : {
         url:'https://mobile.twitter.com/trutherbot',
@@ -5119,7 +5144,8 @@ var automated_tests={
     "966184" : {
         url: 'http://www.national-lottery.co.uk/',
          ua: "FirefoxOS",
-        steps:[function(){return location.hostname.indexOf("m.national-lottery.co.uk")>-1 && hasViewportMeta()}]
+        steps:[function(){return pageWidthFitsScreen() && hasViewportMeta()}],
+        "mobNavElm": "div.nav_main_mobile_option"
     },
 	"785374" : {
 		url: 'http://www.national-lottery.co.uk/',
