@@ -492,7 +492,7 @@ function calculateListDetails(tr, list, excludeUS){
 				}
 				if(bug.status === 'NEW' && bug.whiteboard.indexOf('[contactready]')>-1){
 					todos.push( ['Contact '+site+' regarding "'+bug.summary+'"', bug.link, bug.priority] );
-				else if(bug.status === 'NEW' && bug.whiteboard.indexOf('[needscontact]')>-1){
+				}else if(bug.status in {'NEW':1,'OPEN':1} && bug.whiteboard.indexOf('[needscontact]')>-1){
 					todos.push( ['Find contact person for '+site+' regarding "'+bug.summary+'"', bug.link, bug.priority] );
 				}else if((bug.status === 'UNCONFIRMED' || ( ! /\[((not|)contactready|sitewait|(server|client)sniff)\]/.test(bug.whiteboard) )) && ! hasNeedInfoFlag ){
 					// We ignore bugs that have: notcontactready, contactready, sitewait, serversniff, clientsniff labels in whiteboard, and bugs with a 'needinfo' flag
@@ -644,3 +644,4 @@ function millisecondsToStr (milliseconds) {
     }
     return 'now'; //'just now' //or other string you like;
 }
+

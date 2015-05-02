@@ -1,82 +1,82 @@
 body {
-	margin: 0px;
+  margin: 0px;
 }
 h1 {
-	text-align: center;
-	margin-top: 50px;
+  text-align: center;
+  margin-top: 50px;
 }
 
 h4 {
-	text-align: center;
+  text-align: center;
 }
 footer {
-	text-align: center;
-	padding-bottom: 15px;
+  text-align: center;
+  padding-bottom: 15px;
 }
 
 #wrapper {
-	background: rgb(245,241,232) url('../images/mozorg-gradient.png') repeat-x top center;
-	border-top: 2px solid #fff;
-	padding: 0em 2em 2em 2em;
+  background: rgb(245,241,232) url('../images/mozorg-gradient.png') repeat-x top center;
+  border-top: 2px solid #fff;
+  padding: 0em 2em 2em 2em;
 
 }
 .dependbugs div{
-	display: inline;
+  display: inline;
 }
 table {
-	width: 100%;
-	border-radius: 5px;
-	border: 1px solid black;
+  width: 100%;
+  border-radius: 5px;
+  border: 1px solid black;
 }
 
 .desktop-site {
-	background-color: #CCCCCC;
+  background-color: #CCCCCC;
 }
 
 .no-issue {
-	background-color: #64E986;
+  background-color: #64E986;
 }
 
 .minor-issue {
-	background-color: #ffb;
+  background-color: #ffb;
 }
 
 .major-issue {
-	background-color: #db9;
+  background-color: #db9;
 }
 
 #legend {
-	text-align: center;
-	width: 900px;
+  text-align: center;
+  width: 900px;
 }
 
 #loading {
-	text-align: center;
+  text-align: center;
 }
 
 #summary{
-	text-align: center;
+  text-align: center;
 }
 
 .summarytitle {
-	text-align: center;
-	background-color: #eb8f00;
-	border-radius: 5px 5px 0px 0px;
-	border-bottom: 1px solid black;
+  text-align: center;
+  background-color: #eb8f00;
+  border-radius: 5px 5px 0px 0px;
+  border-bottom: 1px solid black;
 }
 
 .summaryitem {
-	display: inline-block;
-	border-radius: 5px;
-	border: 1px solid black;
-	width: 210px;
-	margin: 5px;
+  display: inline-block;
+  border-radius: 5px;
+  border: 1px solid black;
+  width: 210px;
+  margin: 5px;
 }
 
 .summarydetails {
-	padding: 5px;
-	background-color: white;
-	border-radius: 0px 0px 5px 5px;
+  padding: 5px;
+  background-color: white;
+  border-radius: 0px 0px 5px 5px;
 }
 
 .dependbugs div.resolved_bug{display:none;}
@@ -102,17 +102,17 @@ h4 {font-size: 24px; letter-spacing: -0.25px; line-height: 100%;}
 .small, small { font-size: 12px; line-height: 100%;}
 
 .raphael-canvas-parent, .raphael-canvas-parent table, {
-	/*width: 100%;*/
+  /*width: 100%;*/
 }
 .list-master-table, .test-result-changes-table{
-	border-collapse:collapse;
+  border-collapse:collapse;
 }
 .list-master-table .todo a:before{
-	content: "TODO: "
+  content: "TODO: "
 }
 .list-master-table .todo a{
-	font-size: small;
-	text-decoration: none;
+  font-size: small;
+  text-decoration: none;
 }
 .list-master-table th, .test-result-changes-table th{text-align:left}
 .list-master-table .list-details-row{display:none}
@@ -122,125 +122,130 @@ h4 {font-size: 24px; letter-spacing: -0.25px; line-height: 100%;}
 .list-status-graph .open{background-color: #700}
 .list-status-graph .resolved{background-color: #070}
 .list-status-graph .contacted{background-color: #083}
-.list-status-graph .contactready{background-color: #FC0}
+.list-status-graph .needscontact{background-color: #DAC423}
+.list-status-graph .contactready{background-color: #7EC269}
 
 tr.contactready td:first-child{
-	background: linear-gradient(to right,#FC0, transparent 15%);
-	padding-left: 10px;
+  background: linear-gradient(to right,#7EC269, transparent 15%);
+  padding-left: 10px;
+}
+tr.needscontact td:first-child{
+  background: linear-gradient(to right,#DAC423, transparent 15%);
+  padding-left: 10px;
 }
 tr.needsanalysis td:first-child{
-	background: linear-gradient(to right,#700, transparent 15%);
-	padding-left: 10px;
+  background: linear-gradient(to right,#700, transparent 15%);
+  padding-left: 10px;
 }
 tr.sitewait td:first-child{
-	background: linear-gradient(to right, #083, transparent 15%);
-	padding-left: 10px;
+  background: linear-gradient(to right, #083, transparent 15%);
+  padding-left: 10px;
 }
 
 .chart-canvas-parent, .chart-canvas-parent canvas{width: 100%}
 #metrics{
-	text-align:center;
-	font-size:large;
-	padding: 20px;
-	border: 3px inset #333
+  text-align:center;
+  font-size:large;
+  padding: 20px;
+  border: 3px inset #333
 }
 
 .test-result-changes-table th, .test-result-changes-table td{
-	border: 1px solid black;
+  border: 1px solid black;
 }
 
 .test-result-changes-table td.regr, .test-result-changes-table td.fix {
-	background-repeat: no-repeat;
-	padding-left: 50px;
+  background-repeat: no-repeat;
+  padding-left: 50px;
 }
 .test-result-changes-table td.regr{
-	background-image: url(data:image/jpeg;base64,%2F9j%2F4AAQSkZJRgABAQEASABIAAD%2F2wBDAAQDAwQDAwQEBAQFBQQFBwsHBwYGBw4KCggLEA4RERAOEA8SFBoWEhMYEw8QFh8XGBsbHR0dERYgIh8cIhocHRz%2F2wBDAQUFBQcGBw0HBw0cEhASHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBz%2FwAARCAAzADMDASIAAhEBAxEB%2F8QAHAABAAEFAQEAAAAAAAAAAAAAAAUEBgcICQED%2F8QANhAAAQMDAQQFCQkAAAAAAAAAAQACAwQFEQYHEiExCBMUM1EiNUFCcXSBsbMVJDI0N2FykbT%2FxAAaAQEAAgMBAAAAAAAAAAAAAAAABAYCAwUH%2F8QAJhEAAgICAQIGAwEAAAAAAAAAAQIAAwQRBTFBBhJRYYHRIUKRwf%2FaAAwDAQACEQMRAD8A3%2BVLcK1tvpJKh8ckjWAEtjbvO5gcviqpYz2%2F3m4ae2T3652uqfSXCmNM6KdgBcwmpiBIyCORKwscIpc9pvxcdsm9KEOi5AG%2Fc6l%2FWi4G626CrMEkBlBPVyAgjiR6QOeM8uRCrly%2FO0fWdVOet1hqJwDiQPtScAEnJwA7A4%2BAWRdFdIvW%2BinxCqr33%2B2cespbpKXSeJLJ8F7T6PK32jj5K545SvzAMCJbG8F5RqNlVisR26fw%2Fepv2i18i6YmgzbzUTUN9jqGgl1KKeNzhjwcJN3Hhkg%2FsFnOx3QXq0UFx7PJT9sp46jqZcb8e%2B0O3XY4ZGccCQp1d1dh0h3KzlcdlYihsisqD%2BBvvJBERbZChYl6TH6Kan9lN%2FqhWWlYu2DSsmt9n9ysEVU2kkuEtNEJ3RmQM%2B8xHO6CM8vELVepaplXqQZO4u1Kc2m2w6VXUk%2BwIJnNODvne1SM%2Fcj4rcLQnRI0TDRsrL3W3W91RfIx4dL2WAlj3MBayLDxwA5yO5KE2sdFECEV%2Bz44eO8s9ZUkh4xzilkJIdn1XnByTvNxg8Kzj7gPPr47z0rD8VccWNBYjf7EaX7HyNes1APCOpPgw%2FIrq1p6llobFbKWfv4KWKOT%2BQYAfkuedo2FbRBqGnpa3RF1NO2ePtHlRBjog8F4Em%2FuHLcj8XFdHgFO4%2BtlZ2Ya6f7K54sy6raqK6mDaLE6IPprp8z1ERdSUqFGX78jF73TfXYpNWzqKpurnMho7WJ4WubIZTJg7zXhwwMcstBSJXaZ81H3mp%2Bu9TCsy13W72%2BF0EtkcI95z2lkpJLnOLnZyPEkqvGoa8nzNUpEuRFBRXutkODZ6ge0hTMMjpYw5zCwn1SRkf0kT6IiJEIiJEIiJEIiJEIiJE%2F%2F2Q%3D%3D);
+  background-image: url(data:image/jpeg;base64,%2F9j%2F4AAQSkZJRgABAQEASABIAAD%2F2wBDAAQDAwQDAwQEBAQFBQQFBwsHBwYGBw4KCggLEA4RERAOEA8SFBoWEhMYEw8QFh8XGBsbHR0dERYgIh8cIhocHRz%2F2wBDAQUFBQcGBw0HBw0cEhASHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBz%2FwAARCAAzADMDASIAAhEBAxEB%2F8QAHAABAAEFAQEAAAAAAAAAAAAAAAUEBgcICQED%2F8QANhAAAQMDAQQFCQkAAAAAAAAAAQACAwQFEQYHEiExCBMUM1EiNUFCcXSBsbMVJDI0N2FykbT%2FxAAaAQEAAgMBAAAAAAAAAAAAAAAABAYCAwUH%2F8QAJhEAAgICAQIGAwEAAAAAAAAAAQIAAwQRBTFBBhJRYYHRIUKRwf%2FaAAwDAQACEQMRAD8A3%2BVLcK1tvpJKh8ckjWAEtjbvO5gcviqpYz2%2F3m4ae2T3652uqfSXCmNM6KdgBcwmpiBIyCORKwscIpc9pvxcdsm9KEOi5AG%2Fc6l%2FWi4G626CrMEkBlBPVyAgjiR6QOeM8uRCrly%2FO0fWdVOet1hqJwDiQPtScAEnJwA7A4%2BAWRdFdIvW%2BinxCqr33%2B2cespbpKXSeJLJ8F7T6PK32jj5K545SvzAMCJbG8F5RqNlVisR26fw%2Fepv2i18i6YmgzbzUTUN9jqGgl1KKeNzhjwcJN3Hhkg%2FsFnOx3QXq0UFx7PJT9sp46jqZcb8e%2B0O3XY4ZGccCQp1d1dh0h3KzlcdlYihsisqD%2BBvvJBERbZChYl6TH6Kan9lN%2FqhWWlYu2DSsmt9n9ysEVU2kkuEtNEJ3RmQM%2B8xHO6CM8vELVepaplXqQZO4u1Kc2m2w6VXUk%2BwIJnNODvne1SM%2Fcj4rcLQnRI0TDRsrL3W3W91RfIx4dL2WAlj3MBayLDxwA5yO5KE2sdFECEV%2Bz44eO8s9ZUkh4xzilkJIdn1XnByTvNxg8Kzj7gPPr47z0rD8VccWNBYjf7EaX7HyNes1APCOpPgw%2FIrq1p6llobFbKWfv4KWKOT%2BQYAfkuedo2FbRBqGnpa3RF1NO2ePtHlRBjog8F4Em%2FuHLcj8XFdHgFO4%2BtlZ2Ya6f7K54sy6raqK6mDaLE6IPprp8z1ERdSUqFGX78jF73TfXYpNWzqKpurnMho7WJ4WubIZTJg7zXhwwMcstBSJXaZ81H3mp%2Bu9TCsy13W72%2BF0EtkcI95z2lkpJLnOLnZyPEkqvGoa8nzNUpEuRFBRXutkODZ6ge0hTMMjpYw5zCwn1SRkf0kT6IiJEIiJEIiJEIiJEIiJE%2F%2F2Q%3D%3D);
 }
 
 .test-result-changes-table td.fix{
-		background-image: url(data:image/jpeg;base64,%2F9j%2F4AAQSkZJRgABAQEASABIAAD%2F2wBDAAQDAwQDAwQEBAQFBQQFBwsHBwYGBw4KCggLEA4RERAOEA8SFBoWEhMYEw8QFh8XGBsbHR0dERYgIh8cIhocHRz%2F2wBDAQUFBQcGBw0HBw0cEhASHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBz%2FwAARCAAzADMDASIAAhEBAxEB%2F8QAGgABAAIDAQAAAAAAAAAAAAAAAAYIBAUHA%2F%2FEADEQAAEDAwIEAwYHAQAAAAAAAAEAAgMEBREGEgcTITFRYXE0NUFydLMIFCIyN0KBsf%2FEABoBAQACAwEAAAAAAAAAAAAAAAADBAIFBgH%2FxAAlEQACAgECBQUBAAAAAAAAAAAAAQIDBBEhBhIxMpEFFEFR0XH%2F2gAMAwEAAhEDEQA%2FAL%2FLFuFa230slQ6OSRrMZbG0ud1IHb%2FVlKH8Ua2ot2hrpV0kzoamDlPjkaBlpEzOvVRZFyoqlbLpFN%2BNzyT5U2SO0XA3S3QVZgkgMoJ5cgII6kfEDvjI8iFmqkMGs9R1FU9kl9ufLY8lrRVSYBJJPd3iuhWTizqHTXKM9U650ZH6oax5c7zxJ1cPU7gPBc6uKKFYo2QaT%2BevlfmpX9zFPRos4i5PD%2BIPTElMZH01xbMBkwtbE8npnIIkxj1wfILp9urPz9DTVJifCZ4mS8p%2BNzNwBwcdMjOFvaM3HyG40zUmvonjOMtkzJREVoyChHF7%2BO738sf3WKbqMcQrS6%2FaTrLYyYQurJIIRKW7gzdMwZxkZ9MhVM%2BuVuLbXBatxaX9aMZpuLSKWUPtk3zqRXL2Rnou2aN4A6aZTmsuVVcLlOZZGOaZORFlj3MyGx4cAdvYvcvPX3BB0lMJ9KfuaMOoJ5idw8WSOJ6%2BTjjzGMHiMj0DNUVbyp6fCe%2F54ZSnRPuK40ZDZqknsAf%2BFXxtUT6e3UkMgw%2BOGNrvUNAKqFZOF%2BsY75HHVaYrhGJozLks2Fm4bgH7tvbPxVyluuHseyuds7Itdq3Wn2TURabbCIi6gshau%2F8AsMX1dL9%2BNbRRrUVTdHOZDR2oVEDXNkMjpcEua4OGAB2y0HzQGbpn3WfqKj771uFDLXdbvb4XQS2Qhm5z2uZKSS5zi52cjxcSs8ahryfc1QgJIi0UV7rZDg2eoHqQtzDI6WMOcwsJ%2Fqe6A9EREAREQBERAEREAREQH%2F%2FZ);
+    background-image: url(data:image/jpeg;base64,%2F9j%2F4AAQSkZJRgABAQEASABIAAD%2F2wBDAAQDAwQDAwQEBAQFBQQFBwsHBwYGBw4KCggLEA4RERAOEA8SFBoWEhMYEw8QFh8XGBsbHR0dERYgIh8cIhocHRz%2F2wBDAQUFBQcGBw0HBw0cEhASHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBz%2FwAARCAAzADMDASIAAhEBAxEB%2F8QAGgABAAIDAQAAAAAAAAAAAAAAAAYIBAUHA%2F%2FEADEQAAEDAwIEAwYHAQAAAAAAAAEAAgMEBREGEgcTITFRYXE0NUFydLMIFCIyN0KBsf%2FEABoBAQACAwEAAAAAAAAAAAAAAAADBAIFBgH%2FxAAlEQACAgECBQUBAAAAAAAAAAAAAQIDBBEhBhIxMpEFFEFR0XH%2F2gAMAwEAAhEDEQA%2FAL%2FLFuFa230slQ6OSRrMZbG0ud1IHb%2FVlKH8Ua2ot2hrpV0kzoamDlPjkaBlpEzOvVRZFyoqlbLpFN%2BNzyT5U2SO0XA3S3QVZgkgMoJ5cgII6kfEDvjI8iFmqkMGs9R1FU9kl9ufLY8lrRVSYBJJPd3iuhWTizqHTXKM9U650ZH6oax5c7zxJ1cPU7gPBc6uKKFYo2QaT%2BevlfmpX9zFPRos4i5PD%2BIPTElMZH01xbMBkwtbE8npnIIkxj1wfILp9urPz9DTVJifCZ4mS8p%2BNzNwBwcdMjOFvaM3HyG40zUmvonjOMtkzJREVoyChHF7%2BO738sf3WKbqMcQrS6%2FaTrLYyYQurJIIRKW7gzdMwZxkZ9MhVM%2BuVuLbXBatxaX9aMZpuLSKWUPtk3zqRXL2Rnou2aN4A6aZTmsuVVcLlOZZGOaZORFlj3MyGx4cAdvYvcvPX3BB0lMJ9KfuaMOoJ5idw8WSOJ6%2BTjjzGMHiMj0DNUVbyp6fCe%2F54ZSnRPuK40ZDZqknsAf%2BFXxtUT6e3UkMgw%2BOGNrvUNAKqFZOF%2BsY75HHVaYrhGJozLks2Fm4bgH7tvbPxVyluuHseyuds7Itdq3Wn2TURabbCIi6gshau%2F8AsMX1dL9%2BNbRRrUVTdHOZDR2oVEDXNkMjpcEua4OGAB2y0HzQGbpn3WfqKj771uFDLXdbvb4XQS2Qhm5z2uZKSS5zi52cjxcSs8ahryfc1QgJIi0UV7rZDg2eoHqQtzDI6WMOcwsJ%2Fqe6A9EREAREQBERAEREAREQH%2F%2FZ);
 }
 .test-result-changes-table .viewcode{
-	font-size: small;
+  font-size: small;
 }
 #testcodeviewer{
-	background: #fff;
-	position: fixed;
-	top: 15%;
-	left:20%;
-	right: 20%;
-	padding: 10px;
-	border: 2px solid black;
-	box-shadow: #ccc 5px 5px 5px 5px;
+  background: #fff;
+  position: fixed;
+  top: 15%;
+  left:20%;
+  right: 20%;
+  padding: 10px;
+  border: 2px solid black;
+  box-shadow: #ccc 5px 5px 5px 5px;
 }
 #testcodeviewer pre{
-	background: #ccc;
-	overflow: scroll;
-	width: 100%;
+  background: #ccc;
+  overflow: scroll;
+  width: 100%;
 }
 
 .nested-bug-table{
-	border: 0px;
+  border: 0px;
 }
 .nested-bug-table tr.resolved td a{
-	font-style: italic;
-	color: #444;
+  font-style: italic;
+  color: #444;
 }
 .nested-bug-table td:last-child{
-	width: 25%;
+  width: 25%;
 }
 .nested-bug-table td:first-child{
-	width: 8%;
+  width: 8%;
 }
 .nested-bug-table td.summary{
-	width: 66%;
+  width: 66%;
 }
 .nested-bug-table td{
-	text-align: left; height: 1em; overflow: hidden;
+  text-align: left; height: 1em; overflow: hidden;
 }
 .nested-bug-table col.bugnum{width: 7em;}
 .nested-bug-table col.summary{width: 60%;}
 .nested-bug-table col.state{width: 10%;background: #eee}
 
 .list-details-subtable>tbody>tr>td{
-	border-bottom: 1px solid grey;
+  border-bottom: 1px solid grey;
 }
 .list-details-subtable.open .closed, .list-details-subtable.open .no_bugs{
-	display:none;
+  display:none;
 }
 .list-details-subtable.closed .open, .list-details-subtable.closed .no_bugs{
-	display:none;
+  display:none;
 }
 .list-details-subtable.no_bugs .open, .list-details-subtable.no_bugs .closed{
-	display:none;
+  display:none;
 }
 .sitelink{
-	float:right;
-	visibility:hidden;
+  float:right;
+  visibility:hidden;
 }
 td:hover>.sitelink{
-	visibility:visible;
+  visibility:visible;
 }
 
 .touch_friendly .sitelink{
-	visibility: visible;
-	float: none;
+  visibility: visible;
+  float: none;
 }
 thead .tabs td{
-	text-align: center;
+  text-align: center;
 }
 thead .tabs a{
-	display: inline-block;
-	border: thin solid black;
-	margin-left: 2%;
+  display: inline-block;
+  border: thin solid black;
+  margin-left: 2%;
 }
 
 .manualTestResults{
-	clear:left;
+  clear:left;
 }
 .manualTestResults strong.pass{
-	color: green;
+  color: green;
 }
 .manualTestResults strong.fail{
-	color: red;
+  color: red;
 }
