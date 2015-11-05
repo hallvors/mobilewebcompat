@@ -1,5 +1,4 @@
 # TODO: linkify bug numbers in task descriptions
-# TODO: sanitize user input :)
 
 
 import os, json, re, glob
@@ -26,19 +25,25 @@ def head_html(title):
 
   """ % (title,title))
 
-allowed_files = [ '/timeline.html', '/screenshots/index.htm' ]
+serve_path_directly = [ '/timeline.html', '/screenshots/index.htm' ]
 for fn in glob.glob( './data/*.*'):
-  allowed_files.append(fn[1:].replace('\\', '/'))
+  serve_path_directly.append(fn[1:].replace('\\', '/'))
 for fn in glob.glob( './data/testing/*.*'):
-  allowed_files.append(fn[1:].replace('\\', '/'))
+  serve_path_directly.append(fn[1:].replace('\\', '/'))
 for fn in glob.glob( './js/*.*'):
-  allowed_files.append(fn[1:].replace('\\', '/'))
+  serve_path_directly.append(fn[1:].replace('\\', '/'))
+for fn in glob.glob( './screenshots/js/*.*'):
+  serve_path_directly.append(fn[1:].replace('\\', '/'))
+for fn in glob.glob( './screenshots/css/*.*'):
+  serve_path_directly.append(fn[1:].replace('\\', '/'))
 for fn in glob.glob( './css/*.*'):
-  allowed_files.append(fn[1:].replace('\\', '/'))
+  serve_path_directly.append(fn[1:].replace('\\', '/'))
 for fn in glob.glob( './images/*.*'):
-  allowed_files.append(fn[1:].replace('\\', '/'))
+  serve_path_directly.append(fn[1:].replace('\\', '/'))
 for fn in glob.glob( './extensions/*.*'):
-  allowed_files.append(fn[1:].replace('\\', '/'))
+  serve_path_directly.append(fn[1:].replace('\\', '/'))
+for fn in glob.glob( './lists/*.*'):
+  serve_path_directly.append(fn[1:].replace('\\', '/'))
 
 def get_mime_type(f):
   m_type = mimetypes.guess_type(f)[0]
@@ -82,6 +87,8 @@ def buglist_to_table(title, list, the_data, output):
 def arewecompatibleyet(environ, start_response):
   parameters = parse_qs(environ.get('QUERY_STRING', ''))
   output=[]
+  print( environ['PATH_INFO'])
+  sys.stdout.flush()
   if environ['PATH_INFO'] is '/':
     f = open('timeline.html', 'r')
     contents = f.read()
@@ -89,15 +96,8 @@ def arewecompatibleyet(environ, start_response):
     headers = [('Content-type', 'text/html;charset=utf-8'), ('X-served-with', 'wsgi.py')]
     start_response('200 OK', headers)
     return [contents]
-  if '/screenshots/' in environ['PATH_INFO'] and not '.py' in environ['PATH_INFO']:
-    f = open('screenshots/index.htm', 'r')
-    contents = f.read()
-    f.close()
-    headers = [('Content-type', 'text/html;charset=utf-8'), ('X-served-with', 'wsgi.py')]
-    start_response('200 OK', headers)
-    return [contents]
 
-  if environ['PATH_INFO'] in allowed_files:
+  if environ['PATH_INFO'] in serve_path_directly:
     # sigh.. we tried --static-map configuration, but it seems we have to serve this "manually" anyway
     m_type = get_mime_type(environ['PATH_INFO'])
     if 'text/' in m_type:
@@ -155,8 +155,11 @@ def arewecompatibleyet(environ, start_response):
       output.append('<p><a href="%s">The bug report</a> should explain what the site needs to know. Your task is to reach out and try to find a contact that can help us fix the website.</p>' % the_link)
       output.append('<ol>')
       if the_host in data['hostIndex']:
-        for bugnr in data['hostIndex'][the_host]['resolved']:
-            output.append('<li><b>Pro tip</b>: we may already have contacted this site about <a href="%s">bug %s</a>. Check if that bug has contact details!' % (bugnr, data['bugs'][str(bugnr)]['link']))
+        if len(data['hostIndex'][the_host]['resolved']) > 0:
+            output.append('<li><b>Pro tip:</b> Look at old, resolved bugs <a href="/site/%s">listed here</a> - if we contacted them already, closed bugs may have useful contact details' % the_host)
+            # the below loop does not actually work, and I have absolutely no idea why..
+        for bug_number in data['hostIndex'][the_host]['resolved']:
+            output.append('<li>..indeed, we may already have contacted this site about <a href="%s">bug %s</a>. Check if that bug has contact details!' % (bug_number, data['bugs'][str(bug_number)]['link']))
       output.append('<li>You can look for "Contact us" forms or E-mail addresses on the site..')
       output.append('<li>..you can try to find developers for the site on GitHub or LinkedIn..')
       output.append('<li>..you can look for the site\'s accounts on Twitter or Facebook..')
