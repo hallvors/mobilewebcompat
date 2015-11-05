@@ -32,7 +32,8 @@ function hasVideoTags(){
 }
 
 function pageWidthFitsScreen(){
-    if(!document.body)return 'delay-and-retry';
+    if(!document.body)return 'delay-and-retry'; // we need a body to read the width of..
+    if(document.readyState !== 'complete')return 'delay-and-retry'; // turns out widths are not reliably reported while the document is loading..
     var docwidth = Math.max(document.body.scrollWidth, document.documentElement.scrollWidth);
     if(docwidth > (window.innerWidth * 1.02))return false; // page is more than 2 percentage points wider than than window width
     return true;
