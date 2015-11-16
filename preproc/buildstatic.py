@@ -151,8 +151,8 @@ def write_list_html(listname, masterBugTable, list_data, test_data):
           elif '[needscontact]' in bug_data['whiteboard']:
             needscontact[str(bug)] = bug_data
             bug_step = 'needscontact'
-            action_links.insert(0, task_link_template.format(**{'desc':'Find contact person for %s about bug %s' % (hostname, bug), 'bug':bug_data['id'], 'host':hostname, 'type':'findcontact', 'link':bug_data['link'], 'difficulty':'medium', 'linktext': 'find contact'}))
-            tasks['medium'].append({'desc':'Find contact person for %s about bug %s' % (hostname, bug_data['id']), 'bug':bug_data['id'], 'type':'findcontact', 'link':bug_data['link'], 'difficulty':'medium'})
+            action_links.insert(0, task_link_template.format(**{'desc':'Find contact person at %s regarding bug %s' % (hostname, bug), 'bug':bug_data['id'], 'host':hostname, 'type':'findcontact', 'link':bug_data['link'], 'difficulty':'medium', 'linktext': 'find contact'}))
+            tasks['medium'].append({'desc':'Find contact person at %s regarding bug %s' % (hostname, bug_data['id']), 'bug':bug_data['id'], 'type':'findcontact', 'link':bug_data['link'], 'difficulty':'medium'})
           elif '[sitewait]' in bug_data['whiteboard']:
             contacted[str(bug)] = bug_data
             bug_step = 'sitewait'
