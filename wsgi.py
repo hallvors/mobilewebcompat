@@ -125,9 +125,10 @@ def arewecompatibleyet(environ, start_response):
 
   if environ['PATH_INFO'] in serve_path_redis:
     data = serve_path_redis[environ['PATH_INFO']]
-    data[headers].push(('X-served-with', 'wsgi-redis'))
-    start_response('200 OK', data['headers'])
-    return [redisDB.get(data['key'])]
+    if data and redisDB.get(data['key']):
+      data[headers].push(('X-served-with', 'wsgi-redis'))
+      start_response('200 OK', data['headers'])
+      return [redisDB.get(data['key'])]
 
   if environ['PATH_INFO'] in serve_path_directly:
     # sigh.. we tried --static-map configuration, but it seems we have to serve this "manually" anyway
