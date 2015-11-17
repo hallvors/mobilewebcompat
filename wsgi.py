@@ -58,13 +58,22 @@ for fn in glob.glob( './lists/*.*'):
 serve_path_redis = {
   '/data/masterbugtable.js': {
     'headers' : [
-     ('Content-type', 'text/javascript')
+     ('Content-type', 'text/javascript'),
+     ('Cache-control', 'max-age=%s' % 60*60*24)
+     # Cache this resource for a day
+     # Data is updated from bug systems more frequently,
+     # but the data in those systems do not change that much
+     # This is of course a trade-off, especially given that
+     # the whole point of AWCY is an updated and different view
+     # of what needs doing right now..
     ],
     'key': 'masterbugtable'
   },
   '/data/history.json': {
     'headers' : [
-     ('Content-type', 'text/json')
+     ('Content-type', 'text/json'),
+     ('Cache-control', 'max-age=%s' % 60*60*24*7)
+     # This is updated weekly, so let's tell the browser to cache it
     ],
     'key': 'history'
   }
