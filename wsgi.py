@@ -128,7 +128,7 @@ def arewecompatibleyet(environ, start_response):
     if data:
       content = redisDB.get(data['key'])
       if content:
-        data[headers].push(('X-served-with', 'wsgi.py from redis'))
+        data['headers'].push(('X-served-with', 'wsgi.py from redis'))
         start_response('200 OK', data['headers'])
         return [content]
 
