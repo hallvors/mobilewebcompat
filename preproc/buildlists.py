@@ -183,6 +183,7 @@ def main():
   # total metrics - all lists
   masterBugTable['metrics'] = {"numOpenBugs":len(metrics['allOpenBugsForAllLists']), "numHosts":len(metrics['totalUniqueHosts']), "numHostsWithOpenBugs":len(metrics['hostsWithOpenBugs'])}
   masterBugTable['timestamp'] = time.time()
+  masterBugTable['timestamp_human'] =  str(datetime.now())
   # local metrics..
   for the_list in masterBugTable['lists']:
     the_list_data = masterBugTable['lists'][the_list]
@@ -207,14 +208,14 @@ def main():
     if (time.time() - recent_ts) / (60*60*24*7) < 1:
       # If the file already exists, we only update it if it's older than a week.
       print("History is still young, < one week per timestamp")
-      historical_data = None
+      update_history = False
   else:
     # There is no file yet, history starts here
     print("history starts here..")
     historical_data = []
 
-  if historical_data:
-    # If historical_data is still None at this point, there is data less than a week old
+  if update_history:
+    # If update_history is False at this point, there is data less than a week old
     # ..so we don't bother doing anything
     # Let's save [ { timestamp, numOpenBugs, numHosts, numHostsWithOpenBugs } ]
     history_now = {"timestamp": str(time.time()), "numOpenBugs": masterBugTable['metrics']['numOpenBugs'], "numHosts": masterBugTable['metrics']['numHosts'], "numHostsWithOpenBugs": masterBugTable['metrics']['numHostsWithOpenBugs'] }
