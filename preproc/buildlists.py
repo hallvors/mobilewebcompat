@@ -258,7 +258,7 @@ def hostsFromText(text):
   for hostname in hosts:
     parts = tldextract.extract(hostname)
     if parts.domain == '' or parts.domain == 'www':
-      hostname = parts.suffix # Hello blogspot.com and friends..
+      hostname = parts.suffix  # Hello blogspot.com and friends..
     else:
       if re.search(conf['weWantSubdomainsFor'], hostname, re.I) and not re.search('^www', parts[0]):
         hostname = '.'.join(parts[0:3])
