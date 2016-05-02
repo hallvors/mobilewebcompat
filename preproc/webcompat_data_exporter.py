@@ -79,7 +79,8 @@ def extract_data(json_data, results_csv, results_bzlike):
         else:
             status = 'RESOLVED'
         # Extracting the labels
-        labels_list = [label['name'] for label in issue['labels']]
+        rx_unprefix = re.compile('^(status-|browser-|os-)')
+        labels_list = [re.sub(rx_unprefix, '', label['name']) for label in issue['labels']]
         # areWEcompatibleyet is only about mozilla bugs
         if any([('firefox' or 'mozilla') in label for label in labels_list]):
             # Defining the OS
