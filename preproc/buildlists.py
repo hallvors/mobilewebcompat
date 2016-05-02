@@ -205,6 +205,8 @@ def main():
   # we may want to store some statistics for posterity
   if historical_data:
     previous_entry = historical_data[len(historical_data)-1]
+    print(previous_entry)
+    recent_ts = 0
     if 'timestamp' in previous_entry:
       recent_ts = previous_entry['timestamp']
     if recent_ts and (time.time() - recent_ts) / (60*60*24*7) < 1:
