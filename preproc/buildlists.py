@@ -91,12 +91,12 @@ def main():
   if conf['load_webcompat_bugs']:
     # merge in webcompat.com data
     webcompat_data = get_webcompat_data()[1]
-    try:
-      f = open('data/wc-cache.json', 'w')
-      f.write(json.dumps(webcompat_data).encode('utf_8'))
-      f.close()
-    except:
-      print('wot?')
+#    try:
+#      f = open('data/wc-cache.json', 'w')
+#      f.write(json.dumps(webcompat_data).encode('utf_8'))
+#      f.close()
+#    except:
+#      print('wot?')
   else:
     print('Warning: using cached webcompat data')
     f = open('data/wc-cache.json', 'r')
@@ -204,9 +204,10 @@ def main():
   update_history = True
   # we may want to store some statistics for posterity
   if historical_data:
-    print(historical_data)
-    recent_ts = historical_data[len(historical_data)-1]['timestamp']
-    if (time.time() - recent_ts) / (60*60*24*7) < 1:
+    previous_entry = historical_data[len(historical_data)-1]
+    if 'timestamp' in previous_entry:
+      recent_ts = previous_entry['timestamp']
+    if recent_ts and (time.time() - recent_ts) / (60*60*24*7) < 1:
       # If the file already exists, we only update it if it's older than a week.
       print("History is still young, < one week per timestamp")
       update_history = False
