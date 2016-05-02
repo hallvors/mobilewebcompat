@@ -204,6 +204,7 @@ def main():
   update_history = True
   # we may want to store some statistics for posterity
   if historical_data:
+    print(historical_data)
     recent_ts = historical_data[len(historical_data)-1]['timestamp']
     if (time.time() - recent_ts) / (60*60*24*7) < 1:
       # If the file already exists, we only update it if it's older than a week.
