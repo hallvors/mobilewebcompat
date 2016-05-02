@@ -207,7 +207,7 @@ def main():
     previous_entry = historical_data[len(historical_data)-1]
     recent_ts = 0
     if 'timestamp' in previous_entry:
-      recent_ts = previous_entry['timestamp']
+      recent_ts = float(previous_entry['timestamp'])
     if recent_ts and (time.time() - recent_ts) / (60*60*24*7) < 1:
       # If the file already exists, we only update it if it's older than a week.
       print("History is still young, < one week per timestamp")
