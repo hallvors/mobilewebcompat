@@ -18,13 +18,14 @@ def head_html(title):
   <head>
 
   <!--<script type="text/javascript" src="data/masterbugtable.js"></script>-->
-  <script src="//www.mozilla.org/tabzilla/media/js/tabzilla.js"></script>
-  <link href="//www.mozilla.org/tabzilla/media/css/tabzilla.css" rel="stylesheet" />
+  <link href="/css/tabzilla.css" rel="stylesheet" />
   <link rel="StyleSheet" lang="text/css" href="/css/main.css">
   <title>Are We Compatible Yet? - %s</title>
   </head>
   <div id="wrapper">
-  <a href="http://www.mozilla.org/" id="tabzilla">mozilla</a>
+  <div id="tabzilla">
+    <a href="https://www.mozilla.org/">Mozilla</a>
+</div>
   <h1>%s</h1>
 
   """ % (title,title))
