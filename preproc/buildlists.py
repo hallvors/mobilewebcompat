@@ -85,7 +85,7 @@ def main():
   for bug in bzdataobj['bugs']:
     bug['link'] = 'https://bugzilla.mozilla.org/show_bug.cgi?id=%s' % bug['id']
     bug['test_id'] = '%s' % bug['id'] # Bugzilla issues are referenced by bug number in sitedata.js
-    if False and conf['load_remote_bz_data']:
+    if conf['load_remote_bz_data']:
       if '[sitewait]' in bug['whiteboard']:
         bug['last_contacted'] = find_last_contacted_date(bug['id'])
   if conf['load_webcompat_bugs']:
