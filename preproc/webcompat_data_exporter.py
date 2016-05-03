@@ -84,10 +84,12 @@ def extract_data(json_data, results_csv, results_bzlike):
         # areWEcompatibleyet is only about mozilla bugs
         if any([('firefox' or 'mozilla') in label for label in labels_list]):
             # Defining the OS
-            if any(['mobile' in label for label in labels_list]):
-                op_sys = 'Gonk (Firefox OS)'
-            elif any(['android' in label for label in labels_list]):
+            if any(['android' in label for label in labels_list]):
                 op_sys = 'Android'
+            elif any(['iOS' in label for label in labels_list]):
+                op_sys = 'iOS'
+            elif any(['mobile' in label for label in labels_list]):
+                op_sys = 'Gonk (Firefox OS)'
             else:
                 op_sys = ''
             # Did the bug had a resolution?
@@ -97,7 +99,8 @@ def extract_data(json_data, results_csv, results_bzlike):
                 resolution = resolution_set.pop().upper()
             # Gathering Whiteboard keys
             whiteboard = ''.join(['[%s] ' % label for label in labels_list
-                                  if label in whiteboard_labels])
+                                  #if label in whiteboard_labels
+                                  ])
             # creating CSV file
             if issue_title:
                 results_csv.append("%i\t%s\t%s\t%s" % (
