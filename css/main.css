@@ -258,3 +258,16 @@ thead .tabs a{
 .manualTestResults strong.fail{
   color: red;
 }
+
+nav{
+  display: flex;
+  justify-content: space-around;
+  flex-direction: row;
+}
+
+nav nav{
+  display: block;
+}
+nav nav a{
+  display: flex-item;
+}
