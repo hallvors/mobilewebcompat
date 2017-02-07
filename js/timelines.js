@@ -767,3 +767,9 @@ function millisecondsToStr (milliseconds) {
     return 'now'; //'just now' //or other string you like;
 }
 
+
+window.addEventListener('DOMContentLoaded', function(){
+    if(location.hash){
+        showListDetails(location.hash.substring(1), true);
+    }
+}, false);
