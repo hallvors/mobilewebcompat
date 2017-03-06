@@ -149,13 +149,9 @@ window.onhashchange = function(e){
   var newHash = e.newURL.substr(e.newURL.indexOf('#')+1);
   if(newHash.indexOf('region:') === 0) {
     listCountriesInRegion(newHash.substr(7));
-  } else if(newHash.indexOf('list:custom')===-1)showListDetails(newHash, true); // custom list hash will be handled in quickSearchInit()
-
-  // removing and adding lots of content in document from hashchange event tends to mess up "scroll to #hash" logic in browsers
-  // let's fix that again with a little help from jQuery..
-  if(newHash && document.getElementById(newHash))setTimeout(function(){
-    $(document.documentElement).animate({scrollTop:$(document.getElementById(newHash).previousSibling).offset().top}, 10);
-  }, 10);
+  } else if(newHash.indexOf('list:custom')===-1) {
+    showListDetails(newHash, true); // custom list hash will be handled in quickSearchInit()
+  }
 }
 
 function updateTodoRow(div, todos, direction){
@@ -318,7 +314,10 @@ function showTestCode(evt){
 }
 
 function showListDetails(newHash, excludeUS){
-  $('.active').removeClass('active');
+  active = document.querySelector('.active');
+  if(active !== null) {
+    active.classList.remove('active');
+  }
   var listId =  newHash.replace(/list:/, '');
   var detailsDiv = document.getElementById('details');
   detailsDiv.innerHTML = '';
@@ -421,7 +420,12 @@ function showListDetails(newHash, excludeUS){
         });
       }
     });
-    var timedata = masterBugTable.lists[list].timedata, openBugCount = masterBugTable.lists[list].counts.open, resolvedBugCount=masterBugTable.lists[list].counts.resolved;
+    var timedata = [], openBugCount = '', resolvedBugCount = '';
+    if(typeof masterBugTable.lists[list].counts !== 'undefined') {
+        openBugCount = masterBugTable.lists[list].counts.open;
+        resolvedBugCount = masterBugTable.lists[list].counts.resolved;
+        timedata = masterBugTable.lists[list].timedata;
+    }
     timedata.sort( function(a,b){ if((+a[0])>(+b[0]))return 1; return -1; } ); // sort chronologically descending (most recent first)
     var treshold = Date.now() - (1000*60*60*24*365);
     var chartdata = {
@@ -763,3 +767,9 @@ function millisecondsToStr (milliseconds) {
     return 'now'; //'just now' //or other string you like;
 }
 
+
+window.addEventListener('DOMContentLoaded', function(){
+    if(location.hash){
+        showListDetails(location.hash.substring(1), true);
+    }
+}, false);
